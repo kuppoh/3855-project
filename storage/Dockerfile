@@ -14,9 +14,6 @@ RUN pip3 install -r requirements.txt
 
 COPY . /app
 
-RUN chown -R azureuser:azureuser /app
-USER azureuser
-
 EXPOSE 8090
 
 # Entrypoint = run Python
