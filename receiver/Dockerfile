@@ -14,8 +14,8 @@ RUN pip3 install -r requirements.txt
 
 COPY . /app
 
-RUN chown -R nobody:nogroup /app
-USER nobody
+# RUN chown -R nobody:nogroup /app
+# USER nobody
 
 EXPOSE 8080
 
