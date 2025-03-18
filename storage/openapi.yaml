@@ -1,0 +1,201 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: API Project
+  description: Course Project for 3855
+paths:
+  /site/listings: # endpoint for site listings
+    post:
+      summary: Property listings
+      description: Adds a new property listing to the site
+      operationId: app.post_listing # corresponds to the name of the module + function
+      requestBody:
+        description: Property listings to add
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/listing_schema' # references the object that defines jSON reqs msg
+      responses:
+        '201':
+          description: Listing Created
+        '400':
+          description: Invalid Listing
+    get:
+        summary: Shows all properties
+        description: lists all property listings from the site
+        operationId: app.get_listings 
+        parameters:
+          - name: start_timestamp
+            in: query
+            description: Limits the number of readings returned
+            schema:
+              type: string
+              format: date-time
+              example: "2025-02-06 20:21:08"
+          - name: end_timestamp
+            in: query
+            description: Limits the number of readings returend
+            schema:
+              type: string
+              format: date-time
+              example: "2025-02-06 20:21:08" 
+        responses:
+          '200':
+            description: Successfully returned a list of properties
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/listing_schema' # using the existing schema
+  /site/bids:
+    post:
+      summary: Offers/bids on properties
+      description: Adds a new offer on a property
+      operationId: app.post_bid 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/bidding_schema'
+      responses:
+        '201': 
+          description: Offer Created
+        '401':
+          description: Invalid Offer/Bid
+    get:
+      summary: Shows all bids
+      description: lists all bids (offers) on properties
+      operationId: app.get_bids 
+      parameters:
+        - name: start_timestamp
+          in: query
+          description: Limits the number of readings returned
+          schema:
+            type: string
+            format: date-time
+            example: "2025-02-06 20:21:08" 
+        - name: end_timestamp
+          in: query
+          description: Limits the number of readings returend
+          schema:
+            type: string
+            format: date-time
+            example: "2025-02-06 20:21:08" 
+      responses:
+        '200':
+          description: Successfully returned a list of properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/bidding_schema' # current existing bids schema
+components:
+  schemas:
+    listing_schema:
+      required: 
+      - listing_id
+      - listing_price
+      # - listing_post
+      - listing_type
+      - listing_status
+      - listing_contact
+      - trace_id
+      type: object
+      description: Different Property Listings
+      properties:
+        listing_id:
+          type: integer
+          description: The unique listing ID of each property
+          format: int64
+          example: 1
+        listing_price:
+          type: number
+          description: Price of the listing
+          format: float
+          example: 600000.00
+        listing_post:
+          type: string
+          description: The date and time of list posting
+          format: date-time
+          example: 2025-01-07T12:47:00Z
+        listing_type:
+          type: string
+          description: Apartment, Townhouse, Detached, etc.
+          example: Apartment
+        listing_status:
+          enum:
+            - SOLD
+            - OFFER_PENDING
+            - AVAILABLE
+          description: Status of availability on a listing
+          example: SOLD
+        listing_contact:
+          type: string
+          description: Contact information of seller of listing
+          format: email
+          example: random_person@random.com
+        trace_id:
+          type: integer
+          format: int64
+    
+    bidding_schema:
+      title: bidding_schema
+      type: object
+      required: 
+      - bidding_id
+      - listing_id
+      - asking_price
+      - offer_price
+      # - offer_date
+      - property_square_feet
+      - price_per_square_feet
+      - bid_status
+      - trace_id
+      description: offers and stats on prices per footage
+      properties:
+        bidding_id:
+          type: integer
+          description: bidding id
+          format: int64
+          example: 1
+        listing_id:
+          type: integer
+          description: The listing ID that is getting an Offer
+          format: int64
+          example: 1
+        asking_price:
+          type: number
+          description: Price set by Seller
+          format: float
+          example: 600000.00
+        offer_price:
+          type: number
+          description: Buyer's offer to the listing
+          format: float
+          example: 619000.00
+        offer_date:
+          type: string
+          description: The date and time the offer was made
+          format: date-time
+          example: 2025-01-07T12:47:00Z
+        property_square_feet:
+          type: integer
+          description: Size of property in square feet
+          format: int64
+          example: 2013
+        price_per_square_feet:
+          type: number
+          description: Pricer per square feet (CAD) depending on asking price
+          format: float
+          example: 298.06
+        bid_status:
+          enum:
+            - APPROVED
+            - REJECTED
+          description: Whether or not the offer/bid to the property was successful
+          example: REJECTED
+        trace_id:
+          type: integer
+          format: int64

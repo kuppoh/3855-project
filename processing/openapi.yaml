@@ -1,0 +1,56 @@
+openapi: 3.0.0
+info:
+  description: This API provides event stats
+  version: "1.0.0"
+  title: Stats API
+paths:
+  /stats:
+    get:
+      summary: gets event stats
+      operationId: app.get_stats
+      description: get bids and listings statisitcs
+      responses:
+        '200':
+          description: Success, returned list of events
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/listStats'
+        '400':
+          description: Failed, Invalid Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+components:
+  schemas:
+    listStats:
+      required:
+      - num_listings
+      - num_bids
+      - max_listing_price
+      - max_offer_price
+      properties:
+        num_listings:
+          type: integer
+          description: number of current listings
+          example: 400
+        num_bids:
+          type: integer
+          description: number of current bids/offers
+          example: 450
+        max_listing_price:
+          type: number
+          description: largest listing price
+          format: float
+          example: 1000000.00
+        max_offer_price:
+          type: number
+          description: largest offer price
+          format: float
+          example: 1300000.00

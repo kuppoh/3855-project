@@ -1,0 +1,10 @@
+version: 1
+datastore: 
+  filename: /app/data/processing/data.json
+scheduler:
+  interval: 10
+eventstores:
+  site_listings:
+    url: http://storage:8090/site/listings
+  site_bids:
+    url: http://storage:8090/site/bids
