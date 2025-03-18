@@ -14,8 +14,8 @@ RUN pip3 install -r requirements.txt
 
 COPY . /app
 
-# RUN chown -R nobody:nogroup /app
-# USER nobody
+RUN chown -R azureuser:azureuser /app
+USER azureuser
 
 EXPOSE 8090
 
