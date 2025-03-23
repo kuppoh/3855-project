@@ -105,7 +105,7 @@ services:
       retries: 3
       start_period: 10s
       timeout: 10s
-    user: root
+    user: nobody
     networks:
       - my_network
 
