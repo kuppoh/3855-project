@@ -81,7 +81,7 @@ services:
       - ./config/receiver/app_conf.yaml:/app/config/receiver/app_conf.yaml
       - ./config/log_conf.yaml:/app/config/log_conf.yaml
       - ./logs/:/app/logs/
-    user: azureuser
+    user: nobody
     networks:
       - my_network
 
@@ -105,7 +105,7 @@ services:
       retries: 3
       start_period: 10s
       timeout: 10s
-    user: azureuser
+    user: nobody
     networks:
       - my_network
 
@@ -124,7 +124,7 @@ services:
       - ./config/log_conf.yaml:/app/config/log_conf.yaml
       - ./logs/:/app/logs/
       - ./data/processing:/app/data/processing/
-    user: azureuser
+    user: nobody
     networks:
       - my_network
 
@@ -142,7 +142,7 @@ services:
       - ./config/analyzer/app_conf.yaml:/app/config/analyzer/app_conf.yaml
       - ./config/log_conf.yaml:/app/config/log_conf.yaml
       - ./logs/:/app/logs/
-    user: azureuser
+    user: nobody
     networks:
       - my_network
 
