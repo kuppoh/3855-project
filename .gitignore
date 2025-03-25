@@ -6,5 +6,6 @@
 /3855
 
 **/__pycache__ 
+**/app.log
 
 /mysql-docker
