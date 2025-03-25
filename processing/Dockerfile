@@ -12,7 +12,7 @@ RUN pip3 install -r requirements.txt
 
 
 COPY . /app
-
+RUN touch /app/data.json
 
 
 EXPOSE 8100
