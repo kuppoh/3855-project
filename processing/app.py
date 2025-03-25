@@ -68,7 +68,7 @@ def populate_stats():
         logger.debug(f"Loaded data from datastore: {data}")
     except json.JSONDecodeError:
       logger.error("Invalid JSON in data.json. Reinitializing with default values.")
-      data = default
+      data = DEFAULT
       with open(DATASTORE, "w") as f:
         json.dump(data, f)
       logger.info("data.json reinitialized with default values.")
@@ -86,7 +86,7 @@ def populate_stats():
   try:
     last_updated = data['last_updated'] 
   except KeyError:
-    last_updated = default['last_updated']
+    last_updated = DEFAULT['last_updated']
 
   print(last_updated)
 
