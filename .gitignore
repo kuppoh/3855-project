@@ -5,6 +5,6 @@
 # virtual environment
 /3855
 
-/__pycache__
+**/__pycache__ 
 
 /mysql-docker
