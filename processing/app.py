@@ -50,29 +50,41 @@ def get_stats():
 
 
 def populate_stats():
-  logger.info("periodic processing has started")
+  logger.info("Periodic processing has started")
 
-  # if file doesn't exist, use default values for stats
-    # Check if the datastore file exists
-  if not os.path.exists(DATASTORE):
-    logger.warning("data.json is missing. Initializing with default values.")
-    data = DEFAULT
+  # Check if the datastore file exists and is not empty
+  if not os.path.exists(DATASTORE) or os.stat(DATASTORE).st_size == 0:
+    logger.warning("data.json is missing or empty. Initializing with default values.")
+    data = {
+      "num_listings": 0,
+      "num_bids": 0,
+      "max_listing_price": 0,
+      "max_offer_price": 0,
+      "last_updated": "2020-01-01 00:00:00"
+    }
     # Create the file with default values
     with open(DATASTORE, "w") as f:
       json.dump(data, f)
     logger.info("data.json created with default values.")
   else:
     try:
+      # Load the JSON data from the existing file
       with open(DATASTORE, "r") as f:
         data = json.load(f)
         logger.debug(f"Loaded data from datastore: {data}")
     except json.JSONDecodeError:
       logger.error("Invalid JSON in data.json. Reinitializing with default values.")
-      data = DEFAULT
+      data = {
+        "num_listings": 0,
+        "num_bids": 0,
+        "max_listing_price": 0,
+        "max_offer_price": 0,
+        "last_updated": "2020-01-01 00:00:00"
+      }
+      # Reinitialize the file with default values
       with open(DATASTORE, "w") as f:
         json.dump(data, f)
       logger.info("data.json reinitialized with default values.")
-
   print(f"UMMM: {data}")
 
 
