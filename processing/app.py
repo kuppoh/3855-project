@@ -27,7 +27,7 @@ DATASTORE = app_config['datastore']['filename']
 def get_stats():
     # if file doesn't exist, use default values for stats
   if os.path.exists(DATASTORE): 
-    with open("./data.json", "r") as f: 
+    with open("./data/processing/data.json", "r") as f: 
       data = json.load(f)
 
     stats = {
