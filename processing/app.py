@@ -14,12 +14,12 @@ with open("./config/processing/app_conf.yaml", "r") as f:
   app_config = yaml.safe_load(f.read())
 
 
-default = { # use for if file doesn't exist
-    "num_listings": 0,
-    "num_bids": 0,
-    "max_listing_price": 0,
-    "max_offer_price": 0,
-    "last_updated": "2020-01-01 00:00:00"
+DEFAULT = { # use for if file doesn't exist
+  "num_listings": 0,
+  "num_bids": 0,
+  "max_listing_price": 0,
+  "max_offer_price": 0,
+  "last_updated": "2020-01-01 00:00:00"
 }
 
 DATASTORE = app_config['datastore']['filename']
@@ -56,7 +56,7 @@ def populate_stats():
     # Check if the datastore file exists
   if not os.path.exists(DATASTORE):
     logger.warning("data.json is missing. Initializing with default values.")
-    data = default
+    data = DEFAULT
     # Create the file with default values
     with open(DATASTORE, "w") as f:
       json.dump(data, f)
