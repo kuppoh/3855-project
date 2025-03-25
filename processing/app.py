@@ -27,7 +27,7 @@ DATASTORE = app_config['datastore']['filename']
 def get_stats():
     # if file doesn't exist, use default values for stats
   if os.path.exists(DATASTORE): 
-    with open("./data/processing/data.json", "r") as f: 
+    with open("/app/data/processing/data.json", "r") as f: 
       data = json.load(f)
 
     stats = {
@@ -53,13 +53,25 @@ def populate_stats():
   logger.info("periodic processing has started")
 
   # if file doesn't exist, use default values for stats
-  if os.path.exists(DATASTORE):
-    with open("./data/processing/data.json", "r") as f:
-      data = json.load(f)
-      logger.debug(f"Loaded data from datastore: {data}")
-  else:
+    # Check if the datastore file exists
+  if not os.path.exists(DATASTORE):
+    logger.warning("data.json is missing. Initializing with default values.")
     data = default
-    logger.debug(f"Using default data: {data}")
+    # Create the file with default values
+    with open(DATASTORE, "w") as f:
+      json.dump(data, f)
+    logger.info("data.json created with default values.")
+  else:
+    try:
+      with open(DATASTORE, "r") as f:
+        data = json.load(f)
+        logger.debug(f"Loaded data from datastore: {data}")
+    except json.JSONDecodeError:
+      logger.error("Invalid JSON in data.json. Reinitializing with default values.")
+      data = default
+      with open(DATASTORE, "w") as f:
+        json.dump(data, f)
+      logger.info("data.json reinitialized with default values.")
 
   print(f"UMMM: {data}")
 
