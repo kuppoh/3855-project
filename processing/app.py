@@ -85,7 +85,7 @@ def populate_stats():
 
   try:
     last_updated = data['last_updated'] 
-  except KeyError:
+  except TypeError:
     last_updated = DEFAULT['last_updated']
 
   print(last_updated)
