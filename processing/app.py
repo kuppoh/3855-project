@@ -202,7 +202,7 @@ def populate_stats():
   }
   print(updated_data)
 
-  with open("data.json", "w") as f:
+  with open("/app/data/processing/data.json", "w") as f:
     json.dump(updated_data, f)
 
   # log DEBUG msg with updated stats values
