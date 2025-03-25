@@ -12,7 +12,7 @@ RUN pip3 install -r requirements.txt
 
 
 COPY . /app
-RUN touch /app/data.json
+RUN echo '{"num_listings": 0, "num_bids": 0, "max_listing_price": 0, "max_offer_price": 0}' > /app/data.json
 
 
 EXPOSE 8100
