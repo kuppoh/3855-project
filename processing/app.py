@@ -54,16 +54,15 @@ def populate_stats():
 
   # if file doesn't exist, use default values for stats
   if os.path.exists(DATASTORE):
-      if os.stat(DATASTORE).st_size == 0:
-        data = {}  
-        with open(DATASTORE, "w") as wf:
-          json.dump(data, wf)
-      else: 
-        with open(DATASTORE, "r") as f:
-          data = json.load(f)
-          logger.debug(f"Loaded data from datastore: {data}")
+    with open("./data/processing/data.json", "r") as f:
+      data = json.load(f)
+      logger.debug(f"Loaded data from datastore: {data}")
+  else:
+    data = default
+    logger.debug(f"Using default data: {data}")
+
   print(f"UMMM: {data}")
-  
+
 
   # get current datetime
 
