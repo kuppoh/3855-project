@@ -18,7 +18,7 @@ const makeReq = (url, cb) => {
         })
 }
 
-const getIndex = () => document.getElementById("index").value || 0; // Default to 0 if no input
+const getIndex = () => document.getElementById("index").value || 1; // Default to 0 if no input
 
 const updateCodeDiv = (result, elemId) => document.getElementById(elemId).innerText = JSON.stringify(result)
 

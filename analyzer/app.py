@@ -37,52 +37,54 @@ hostname = app_config["events"]["hostname"]
 port = app_config["events"]["port"]
 client = KafkaClient(hosts=f"{hostname}:{port}")
 topic = client.topics[app_config["events"]["topic"].encode()]
-consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeout_ms=1000)
+consumer = topic.get_simple_consumer(
+    consumer_group=b'event_group',
+    auto_offset_reset=OffsetType.LATEST,  # Start from the latest message if no offset exists
+    reset_offset_on_start=False,  # Don't reset on start
+    consumer_timeout_ms=1000
+)
+
 #####
 
-def get_listings(index): # get the property listings
-  consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeout_ms=1000)
+def get_listings(index):
   counter = 0
-
   for msg in consumer:
     message = msg.value.decode("utf-8")
     data = json.loads(message)
 
     if data["type"] == "listings": 
       if counter == index:
-        logger.info("found message: listing")
+        logger.info("Found message: listing")
+        consumer.commit_offsets()  # Commit offset after processing
         return jsonify([data["payload"]]), 200
       counter += 1
-  return { "message": f"No message at index {index}!"}, 404
+  return {"message": f"No message at index {index}!"}, 404
 
 
-def get_bids(index): 
-  consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeout_ms=1000)
+def get_bids(index):
   counter = 0
-
   for msg in consumer:
     message = msg.value.decode("utf-8")
     data = json.loads(message)
 
     if data["type"] == "bids": 
       if counter == index:
-        logger.info("found message: bids")
-        return jsonify([data["payload"]]), 200 # it was not an array, so i had to make the return message an array, due to app_config constraints
+        logger.info("Found message: bids")
+        consumer.commit_offsets()  # Commit offset after processing
+        return jsonify([data["payload"]]), 200
       counter += 1
-  return { "message": f"No message at index {index}!"}, 404
+  return {"message": f"No message at index {index}!"}, 404
 
 def get_stats():
-  consumer = topic.get_simple_consumer(consumer_group=b'event_group', reset_offset_on_start=True, consumer_timeout_ms=1000)
   listings_counter = 0
   bids_counter = 0
-  
   for msg in consumer:
     data = json.loads(msg.value.decode("utf-8"))
     if data["type"] == "listings":
       listings_counter += 1
     elif data["type"] == "bids":
       bids_counter += 1
-
+  consumer.commit_offsets()  # Commit offsets after counting
   return {"Listings": listings_counter, "Bids": bids_counter}, 200
 
 app = connexion.FlaskApp(__name__, specification_dir='')

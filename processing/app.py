@@ -18,7 +18,6 @@ app.add_middleware(
   allow_headers=["*"],
 )
 
-
 with open("./config/log_conf.yaml", "r") as f:
   LOG_CONFIG = yaml.safe_load(f.read())
   logging.config.dictConfig(LOG_CONFIG)
