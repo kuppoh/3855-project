@@ -228,17 +228,19 @@ def init_scheduler():
   
 app = connexion.FlaskApp(__name__, specification_dir='') # look at the current directory for OpenAPI Specifications.
 
-app.add_middleware(
-    CORSMiddleware,
-    position=MiddlewarePosition.BEFORE_EXCEPTION,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes": 
+    app.add_middleware(
+        CORSMiddleware,
+        position=MiddlewarePosition.BEFORE_EXCEPTION,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 app.add_api("openapi.yaml", # OpenAPI file to use
+  base_path="/processing",
   strict_validation=True, # validate reqs + msgs + params for endpoints against API file
   validate_responses=True) # validate res msgs from endpoints against API file
 

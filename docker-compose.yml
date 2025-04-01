@@ -138,6 +138,8 @@ services:
       - ./logs/:/app/logs/
       - ./data/processing:/app/data/processing/
     user: nobody
+    environment:
+      CORS_ALLOW_ALL: no
     networks:
       - my_network
 
@@ -156,6 +158,8 @@ services:
       - ./config/log_conf.yaml:/app/config/log_conf.yaml
       - ./logs/:/app/logs/
     user: nobody
+    environment:
+      CORS_ALLOW_ALL: no
     networks:
       - my_network
 
