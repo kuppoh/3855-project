@@ -7,6 +7,20 @@ from pykafka import KafkaClient
 from pykafka.common import OffsetType
 from threading import Thread
 
+from connexion.middleware import MiddlewarePosition
+from starlette.middleware.cors import CORSMiddleware
+
+app = FlaskApp(__name__)
+
+app.add_middleware(
+  CORSMiddleware,
+  position=MiddlewarePosition.BEFORE_EXCEPTION,
+  allow_origins=["*"],
+  allow_credentials=True,
+  allow_methods=["*"],
+  allow_headers=["*"],
+)
+
 with open('./config/analyzer/app_conf.yaml', 'r') as f:
   app_config = yaml.safe_load(f.read())
 

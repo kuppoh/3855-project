@@ -4,6 +4,21 @@ from connexion import NoContent
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy import select
 
+from connexion.middleware import MiddlewarePosition
+from starlette.middleware.cors import CORSMiddleware
+
+app = FlaskApp(__name__)
+
+app.add_middleware(
+  CORSMiddleware,
+  position=MiddlewarePosition.BEFORE_EXCEPTION,
+  allow_origins=["*"],
+  allow_credentials=True,
+  allow_methods=["*"],
+  allow_headers=["*"],
+)
+
+
 with open("./config/log_conf.yaml", "r") as f:
   LOG_CONFIG = yaml.safe_load(f.read())
   logging.config.dictConfig(LOG_CONFIG)
