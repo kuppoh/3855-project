@@ -33,17 +33,19 @@ logger = logging.getLogger('analyzerLogger')
 logger.debug("logging is set up...")
 
 # Kafka client initialization
-hostname = app_config["events"]["hostname"]
+hostname = app_config["events"]["hostname"]  
 port = app_config["events"]["port"]
 client = KafkaClient(hosts=f"{hostname}:{port}")
 topic = client.topics[app_config["events"]["topic"].encode()]
 
-# Initialize the consumer once at the start
-consumer = topic.get_simple_consumer(
-    reset_offset_on_start=True,
-    consumer_timeout_ms=1000,
-    consumer_group=b'event_group'
-)
+def get_kafka_consumer():
+    client = KafkaClient(hosts=f"{hostname}:{port}")
+    topic = client.topics[app_config["events"]["topic"].encode()]
+    return topic.get_simple_consumer(
+        consumer_group=b'event_group',
+        auto_offset_reset=OffsetType.EARLIEST,
+        consumer_timeout_ms=1000
+    )
 
 # Register consumer cleanup on exit
 def cleanup_consumer():
@@ -53,6 +55,7 @@ def cleanup_consumer():
 atexit.register(cleanup_consumer)
 
 def get_listings(index): 
+    consumer = get_kafka_consumer()
     counter = 0
     try:
         for msg in consumer:
@@ -64,12 +67,14 @@ def get_listings(index):
                     return jsonify([data["payload"]]), 200
                 counter += 1
     except pykafka.exceptions.ConsumerStoppedException:
+        consumer.stop()
         logger.error("Consumer was stopped unexpectedly")
         return {"message": "Consumer was stopped unexpectedly"}, 500
-
+    consumer.stop()
     return {"message": f"No message at index {index}!"}, 404
 
 def get_bids(index): 
+    consumer = get_kafka_consumer()
     counter = 0
     try:
         for msg in consumer:
@@ -81,12 +86,14 @@ def get_bids(index):
                     return jsonify([data["payload"]]), 200
                 counter += 1
     except pykafka.exceptions.ConsumerStoppedException:
+        consumer.stop()
         logger.error("Consumer was stopped unexpectedly")
         return {"message": "Consumer was stopped unexpectedly"}, 500
-
+    consumer.stop()
     return {"message": f"No message at index {index}!"}, 404
 
 def get_stats():
+    consumer = get_kafka_consumer()
     listings_counter = 0
     bids_counter = 0
     try:
@@ -97,9 +104,11 @@ def get_stats():
             elif data["type"] == "bids":
                 bids_counter += 1
     except pykafka.exceptions.ConsumerStoppedException:
+        consumer.stop()
         logger.error("Consumer was stopped unexpectedly")
         return {"message": "Consumer was stopped unexpectedly"}, 500
 
+    consumer.stop()
     return {"Listings": listings_counter, "Bids": bids_counter}, 200
 
 # Set up API routes
