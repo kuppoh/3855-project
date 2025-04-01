@@ -28,7 +28,7 @@ with open('./config/analyzer/app_conf.yaml', 'r') as f:
 with open("./config/log_conf.yaml", "r") as f:
     LOG_CONFIG = yaml.safe_load(f.read())
     logging.config.dictConfig(LOG_CONFIG)
-
+sdf
 logger = logging.getLogger('analyzerLogger')
 logger.debug("Logging is set up...")
 
@@ -39,14 +39,16 @@ client = KafkaClient(hosts=f"{hostname}:{port}")
 topic = client.topics[app_config["events"]["topic"].encode()]
 
 consumer = topic.get_simple_consumer(
-    consumer_group=b'event_group',
-    auto_offset_reset=OffsetType.LATEST,
-    reset_offset_on_start=False,  # Do not reset every time
+    reset_offset_on_start=True, 
     consumer_timeout_ms=1000
 )
 
 # Endpoint functions
 def get_listings(index): 
+    consumer = topic.get_simple_consumer(
+        reset_offset_on_start=True, 
+        consumer_timeout_ms=1000
+    )
     counter = 0
     for msg in consumer:
         if msg is None:
@@ -65,6 +67,10 @@ def get_listings(index):
 
 
 def get_bids(index): 
+    consumer = topic.get_simple_consumer(
+        reset_offset_on_start=True, 
+        consumer_timeout_ms=1000
+    )   
     counter = 0
     for msg in consumer:
         if msg is None:
@@ -83,6 +89,10 @@ def get_bids(index):
 
 
 def get_stats():
+    consumer = topic.get_simple_consumer(
+        reset_offset_on_start=True, 
+        consumer_timeout_ms=1000
+    )
     listings_counter = 0
     bids_counter = 0
 
