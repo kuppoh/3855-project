@@ -38,11 +38,6 @@ port = app_config["events"]["port"]
 client = KafkaClient(hosts=f"{hostname}:{port}")
 topic = client.topics[app_config["events"]["topic"].encode()]
 
-consumer = topic.get_simple_consumer(
-    reset_offset_on_start=True, 
-    consumer_timeout_ms=1000
-)
-
 # Endpoint functions
 def get_listings(index): 
     consumer = topic.get_simple_consumer(
