@@ -1,6 +1,6 @@
 /* UPDATE THESE VALUES TO MATCH YOUR SETUP */
 
-const PROCESSING_STATS_API_URL = "http://20.246.105.173:8200/stats"
+const PROCESSING_STATS_API_URL = "http://20.246.105.173:8100/stats"
 const ANALYZER_API_URL = {
     stats: "http://20.246.105.173:8200/stats",
     listsings: "http://20.246.105.173:8200/site/listings",
