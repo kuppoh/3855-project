@@ -1,4 +1,4 @@
-import connexion, json, datetime, logging.config, yaml, pykafka
+import connexion, json, datetime, logging.config, yaml, pykafka, atexit
 from flask import jsonify
 from datetime import datetime
 from connexion import NoContent, FlaskApp
