@@ -28,8 +28,8 @@ const getStats = () => {
     
     makeReq(PROCESSING_STATS_API_URL, (result) => updateCodeDiv(result, "processing-stats"))
     makeReq(ANALYZER_API_URL.stats, (result) => updateCodeDiv(result, "analyzer-stats"))
-    makeReq(ANALYZER_API_URL.snow, (result) => updateCodeDiv(result, "event-listings"))
-    makeReq(ANALYZER_API_URL.lift, (result) => updateCodeDiv(result, "event-bids"))
+    makeReq(ANALYZER_API_URL.listings, (result) => updateCodeDiv(result, "event-listings"))
+    makeReq(ANALYZER_API_URL.bids, (result) => updateCodeDiv(result, "event-bids"))
 }
 
 const updateErrorMessages = (message) => {
