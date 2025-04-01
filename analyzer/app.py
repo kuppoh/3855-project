@@ -45,13 +45,6 @@ consumer = topic.get_simple_consumer(
     consumer_timeout_ms=1000
 )
 
-# Ensure Kafka consumer is properly closed when app exits
-def cleanup_consumer():
-    logger.info("Stopping the Kafka consumer")
-    consumer.stop()
-
-atexit.register(cleanup_consumer)
-
 # Endpoint functions
 def get_listings(index): 
     counter = 0
