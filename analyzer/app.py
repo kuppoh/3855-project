@@ -41,7 +41,7 @@ consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeou
 #####
 
 def get_listings(index): # get the property listings
-  consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeout_ms=1000, consumer_group=b'event_group')
+  consumer = topic.get_simple_consumer(reset_offset_on_start=False, consumer_timeout_ms=1000, consumer_group=b'event_group')
   counter = 0
 
   for msg in consumer:
@@ -54,12 +54,11 @@ def get_listings(index): # get the property listings
         return jsonify([data["payload"]]), 200
       counter += 1
 
-  consumer.stop()
   return { "message": f"No message at index {index}!"}, 404
 
 
 def get_bids(index): 
-  consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeout_ms=1000,consumer_group=b'event_group')
+  consumer = topic.get_simple_consumer(reset_offset_on_start=False, consumer_timeout_ms=1000,consumer_group=b'event_group')
   counter = 0
 
   for msg in consumer:
@@ -71,11 +70,10 @@ def get_bids(index):
         logger.info("found message: bids")
         return jsonify([data["payload"]]), 200 # it was not an array, so i had to make the return message an array, due to app_config constraints
       counter += 1
-  consumer.stop()
   return { "message": f"No message at index {index}!"}, 404
 
 def get_stats():
-  consumer = topic.get_simple_consumer(consumer_group=b'event_group', reset_offset_on_start=True, consumer_timeout_ms=1000)
+  consumer = topic.get_simple_consumer(consumer_group=b'event_group', reset_offset_on_start=False, consumer_timeout_ms=1000)
   listings_counter = 0
   bids_counter = 0
   
@@ -85,7 +83,6 @@ def get_stats():
       listings_counter += 1
     elif data["type"] == "bids":
       bids_counter += 1
-  consumer.stop()
   return {"Listings": listings_counter, "Bids": bids_counter}, 200
 
 app = connexion.FlaskApp(__name__, specification_dir='')
