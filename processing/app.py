@@ -1,6 +1,6 @@
 import connexion, json, datetime, logging.config, yaml, os, httpx
 from datetime import datetime, timezone
-from connexion import NoContent
+from connexion import NoContent, FlaskApp
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy import select
 

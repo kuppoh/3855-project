@@ -1,7 +1,7 @@
 import connexion, json, datetime, logging.config, yaml, pykafka
 from flask import jsonify
 from datetime import datetime
-from connexion import NoContent
+from connexion import NoContent, FlaskApp
 from sqlalchemy import select
 from pykafka import KafkaClient
 from pykafka.common import OffsetType
