@@ -4,7 +4,7 @@ info:
   title: API Project
   description: Course Project for 3855
 paths:
-  /storage/site/listings: # endpoint for site listings
+  /site/listings: # endpoint for site listings
     post:
       summary: Property listings
       description: Adds a new property listing to the site
@@ -48,7 +48,7 @@ paths:
                   type: array
                   items:
                     $ref: '#/components/schemas/listing_schema' # using the existing schema
-  /storage/site/bids:
+  /site/bids:
     post:
       summary: Offers/bids on properties
       description: Adds a new offer on a property
