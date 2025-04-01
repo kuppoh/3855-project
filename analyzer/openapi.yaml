@@ -4,7 +4,7 @@ info:
   title: Audit API
   description: Course Project for 3855
 paths:
-  /site/listings: # endpoint for site listings
+  /analyzer/site/listings: # endpoint for site listings
     get:
         summary: Shows all properties
         description: lists all property listings from the site
@@ -43,7 +43,7 @@ paths:
                   properties:
                     message:
                       type: string
-  /site/bids:
+  /analyzer/site/bids:
     get:
       summary: Shows all bids
       description: lists all bids (offers) on properties
@@ -82,7 +82,7 @@ paths:
                 properties:
                   message:
                     type: string
-  /stats:
+  /analyzer/stats:
     get:
       summary: gets event stats
       operationId: app.get_stats
