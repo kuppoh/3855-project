@@ -37,15 +37,11 @@ hostname = app_config["events"]["hostname"]
 port = app_config["events"]["port"]
 client = KafkaClient(hosts=f"{hostname}:{port}")
 topic = client.topics[app_config["events"]["topic"].encode()]
-consumer = topic.get_simple_consumer(
-    consumer_group=b'event_group',  
-    reset_offset_on_start=True, 
-    consumer_timeout_ms=1000
-)
+consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeout_ms=1000)
 #####
 
 def get_listings(index): # get the property listings
-  # consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeout_ms=1000)
+  consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeout_ms=1000)
   counter = 0
 
   for msg in consumer:
@@ -61,7 +57,7 @@ def get_listings(index): # get the property listings
 
 
 def get_bids(index): 
-  # consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeout_ms=1000)
+  consumer = topic.get_simple_consumer(reset_offset_on_start=True, consumer_timeout_ms=1000)
   counter = 0
 
   for msg in consumer:
@@ -76,7 +72,7 @@ def get_bids(index):
   return { "message": f"No message at index {index}!"}, 404
 
 def get_stats():
-  # consumer = topic.get_simple_consumer(consumer_group=b'event_group', reset_offset_on_start=True, consumer_timeout_ms=1000)
+  consumer = topic.get_simple_consumer(consumer_group=b'event_group', reset_offset_on_start=True, consumer_timeout_ms=1000)
   listings_counter = 0
   bids_counter = 0
   
