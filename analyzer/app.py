@@ -72,7 +72,7 @@ def get_bids(index):
   return { "message": f"No message at index {index}!"}, 404
 
 def get_stats():
-  consumer = topic.get_simple_consumer(consumer_group=b'event_group', reset_offset_on_start=True, consumer_timeout_ms=1000, consumer_group=b'event_group')
+  consumer = topic.get_simple_consumer(consumer_group=b'event_group', reset_offset_on_start=True, consumer_timeout_ms=1000)
   listings_counter = 0
   bids_counter = 0
   
