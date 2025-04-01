@@ -65,6 +65,19 @@ services:
     networks:
       - my_network
 
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nginx
+    ports: 
+      - "8080:80"
+    depends_on: 
+      - processing
+      - analyzer 
+    networks:
+      - my_network
+
   receiver:
     build:
       context: receiver
