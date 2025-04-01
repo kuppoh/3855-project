@@ -28,7 +28,7 @@ with open('./config/analyzer/app_conf.yaml', 'r') as f:
 with open("./config/log_conf.yaml", "r") as f:
     LOG_CONFIG = yaml.safe_load(f.read())
     logging.config.dictConfig(LOG_CONFIG)
-sdf
+
 logger = logging.getLogger('analyzerLogger')
 logger.debug("Logging is set up...")
 
