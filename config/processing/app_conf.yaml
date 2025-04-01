@@ -5,6 +5,6 @@ scheduler:
   interval: 10
 eventstores:
   site_listings:
-    url: http://storage:8090/site/listings
+    url: http://storage/storage/site/listings
   site_bids:
-    url: http://storage:8090/site/bids
+    url: http://storage/storage/site/bids
