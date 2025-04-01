@@ -71,7 +71,7 @@ services:
       dockerfile: Dockerfile
     container_name: nginx
     ports: 
-      - "8080:80"
+      - "8300:8300"
     depends_on: 
       - processing
       - analyzer 
