@@ -113,7 +113,7 @@ services:
       - ./config/log_conf.yaml:/app/config/log_conf.yaml
       - ./logs/:/app/logs/
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8090/ui/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8090/storage/ui/"]
       interval: 30s
       retries: 3
       start_period: 10s
