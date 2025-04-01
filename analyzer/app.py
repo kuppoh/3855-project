@@ -10,16 +10,7 @@ from threading import Thread
 from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
 
-app = FlaskApp(__name__)
-
-app.add_middleware(
-    CORSMiddleware,
-    position=MiddlewarePosition.BEFORE_EXCEPTION,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app = FlaskApp(__name__)
 
 # Load configurations
 with open('./config/analyzer/app_conf.yaml', 'r') as f:
@@ -46,9 +37,6 @@ def get_listings(index):
     )
     counter = 0
     for msg in consumer:
-        if msg is None:
-            break  # Stop if no more messages
-
         message = msg.value.decode("utf-8")
         data = json.loads(message)
 
@@ -70,8 +58,6 @@ def get_bids(index):
     )   
     counter = 0
     for msg in consumer:
-        if msg is None:
-            break  
 
         message = msg.value.decode("utf-8")
         data = json.loads(message)
@@ -95,8 +81,6 @@ def get_stats():
     bids_counter = 0
 
     for msg in consumer:
-        if msg is None:
-            break  
 
         data = json.loads(msg.value.decode("utf-8"))
         if data["type"] == "listings":
@@ -109,6 +93,16 @@ def get_stats():
 
 
 app = connexion.FlaskApp(__name__, specification_dir='')
+app.add_middleware(
+    CORSMiddleware,
+    position=MiddlewarePosition.BEFORE_EXCEPTION,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 app.add_api("openapi.yaml", strict_validation=True, validate_responses=True)
 
 if __name__ == "__main__":

@@ -7,17 +7,6 @@ from sqlalchemy import select
 from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
 
-app = FlaskApp(__name__)
-
-app.add_middleware(
-  CORSMiddleware,
-  position=MiddlewarePosition.BEFORE_EXCEPTION,
-  allow_origins=["*"],
-  allow_credentials=True,
-  allow_methods=["*"],
-  allow_headers=["*"],
-)
-
 with open("./config/log_conf.yaml", "r") as f:
   LOG_CONFIG = yaml.safe_load(f.read())
   logging.config.dictConfig(LOG_CONFIG)
@@ -238,6 +227,17 @@ def init_scheduler():
 
   
 app = connexion.FlaskApp(__name__, specification_dir='') # look at the current directory for OpenAPI Specifications.
+
+app.add_middleware(
+    CORSMiddleware,
+    position=MiddlewarePosition.BEFORE_EXCEPTION,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 app.add_api("openapi.yaml", # OpenAPI file to use
   strict_validation=True, # validate reqs + msgs + params for endpoints against API file
   validate_responses=True) # validate res msgs from endpoints against API file
