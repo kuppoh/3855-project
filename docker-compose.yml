@@ -139,7 +139,7 @@ services:
       - ./data/processing:/app/data/processing/
     user: nobody
     environment:
-      CORS_ALLOW_ALL: no
+      CORS_ALLOW_ALL: yes
     networks:
       - my_network
 
@@ -159,7 +159,7 @@ services:
       - ./logs/:/app/logs/
     user: nobody
     environment:
-      CORS_ALLOW_ALL: no
+      CORS_ALLOW_ALL: yes
     networks:
       - my_network
 
