@@ -53,6 +53,8 @@ def get_listings(index): # get the property listings
         logger.info("found message: listing")
         return jsonify([data["payload"]]), 200
       counter += 1
+
+  consumer.stop()
   return { "message": f"No message at index {index}!"}, 404
 
 
@@ -69,6 +71,7 @@ def get_bids(index):
         logger.info("found message: bids")
         return jsonify([data["payload"]]), 200 # it was not an array, so i had to make the return message an array, due to app_config constraints
       counter += 1
+  consumer.stop()
   return { "message": f"No message at index {index}!"}, 404
 
 def get_stats():
@@ -82,7 +85,7 @@ def get_stats():
       listings_counter += 1
     elif data["type"] == "bids":
       bids_counter += 1
-
+  consumer.stop()
   return {"Listings": listings_counter, "Bids": bids_counter}, 200
 
 app = connexion.FlaskApp(__name__, specification_dir='')
