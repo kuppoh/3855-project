@@ -1,10 +1,10 @@
 /* UPDATE THESE VALUES TO MATCH YOUR SETUP */
 
-const PROCESSING_STATS_API_URL = "http://20.246.105.173:8100/stats"
+const PROCESSING_STATS_API_URL = "http://processing:8100/stats"
 const ANALYZER_API_URL = {
-    stats: "http://20.246.105.173:8200/stats",
-    listsings: "http://20.246.105.173:8200/site/listings",
-    bids: "http://20.246.105.173:8200/site/bids"
+    stats: "http://analyzer:8200/stats",
+    listsings: "http://analyzer:8200/site/listings",
+    bids: "http://analyzer:8200/site/bids"
 }
 
 // This function fetches and updates the general statistics
