@@ -3,10 +3,9 @@
 const PROCESSING_STATS_API_URL = "http://processing:8100/stats"
 const ANALYZER_API_URL = {
     stats: "http://analyzer:8200/stats",
-    listsings: "http://analyzer:8200/site/listings",
-    bids: "http://analyzer:8200/site/bids"
-}
-
+    listings: "http://analyzer:8200/site/listings?index=1", 
+    bids: "http://analyzer:8200/site/bids?index=1"          
+};
 // This function fetches and updates the general statistics
 const makeReq = (url, cb) => {
     fetch(url)
@@ -19,18 +18,30 @@ const makeReq = (url, cb) => {
         })
 }
 
+const getIndex = () => document.getElementById("index").value || 0; // Default to 0 if no input
+
 const updateCodeDiv = (result, elemId) => document.getElementById(elemId).innerText = JSON.stringify(result)
 
 const getLocaleDateStr = () => (new Date()).toLocaleString()
 
-const getStats = () => {
-    document.getElementById("last-updated-value").innerText = getLocaleDateStr()
+// const getStats = () => {
+//     document.getElementById("last-updated-value").innerText = getLocaleDateStr()
     
-    makeReq(PROCESSING_STATS_API_URL, (result) => updateCodeDiv(result, "processing-stats"))
-    makeReq(ANALYZER_API_URL.stats, (result) => updateCodeDiv(result, "analyzer-stats"))
-    makeReq(ANALYZER_API_URL.listings, (result) => updateCodeDiv(result, "event-listings"))
-    makeReq(ANALYZER_API_URL.bids, (result) => updateCodeDiv(result, "event-bids"))
-}
+//     makeReq(PROCESSING_STATS_API_URL, (result) => updateCodeDiv(result, "processing-stats"))
+//     makeReq(ANALYZER_API_URL.stats, (result) => updateCodeDiv(result, "analyzer-stats"))
+//     makeReq(ANALYZER_API_URL.listings, (result) => updateCodeDiv(result, "event-listings"))
+//     makeReq(ANALYZER_API_URL.bids, (result) => updateCodeDiv(result, "event-bids"))
+// }
+
+const getStats = () => {
+    const index = getIndex(); 
+    document.getElementById("last-updated-value").innerText = getLocaleDateStr();
+
+    makeReq(PROCESSING_STATS_API_URL, (result) => updateCodeDiv(result, "processing-stats"));
+    makeReq(ANALYZER_API_URL.stats, (result) => updateCodeDiv(result, "analyzer-stats"));
+    makeReq(`${ANALYZER_API_URL.listings.split('?')[0]}?index=${index}`, (result) => updateCodeDiv(result, "event-listings"));
+    makeReq(`${ANALYZER_API_URL.bids.split('?')[0]}?index=${index}`, (result) => updateCodeDiv(result, "event-bids"));
+};
 
 const updateErrorMessages = (message) => {
     const id = Date.now()
