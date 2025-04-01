@@ -1,10 +1,10 @@
 /* UPDATE THESE VALUES TO MATCH YOUR SETUP */
 
-const PROCESSING_STATS_API_URL = "http://20.246.105.173/processing/stats"
+const PROCESSING_STATS_API_URL = "http://20.246.105.173/processing/processing/stats"
 const ANALYZER_API_URL = {
-    stats: "http://20.246.105.173/analyzer/stats",
-    listings: "http://20.246.105.173/analyzer/site/listings?index=1", 
-    bids: "http://20.246.105.173/analyzer/site/bids?index=1"          
+    stats: "http://20.246.105.173/analyzer/analyzer/stats",
+    listings: "http://20.246.105.173/analyzer/analyzer/site/listings?index=1", 
+    bids: "http://20.246.105.173/analyzer/analyzer/site/bids?index=1"          
 };
 // This function fetches and updates the general statistics
 const makeReq = (url, cb) => {
