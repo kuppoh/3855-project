@@ -40,7 +40,7 @@ topic = client.topics[app_config["events"]["topic"].encode()]
 consumer = topic.get_simple_consumer(
     consumer_group=b'event_group',
     auto_offset_reset=OffsetType.LATEST,  # Start from the latest message if no offset exists
-    reset_offset_on_start=False,  # Don't reset on start
+    reset_offset_on_start=True,  # Don't reset on start
     consumer_timeout_ms=1000
 )
 
