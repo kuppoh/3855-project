@@ -26,10 +26,11 @@ topic = client.topics[app_config["events"]["topic"].encode()]
 
 # Flag for manual cleanup control
 consumer_active = True
+consumer = None
 
 
 def process_messages():
-    global consumer_active
+    global consumer_active, consumer
     logger.info(f"Connecting to Kafka: {hostname}:{port}")
     client = KafkaClient(hosts=f"{hostname}:{port}")
     topic = client.topics[str.encode(app_config['events']['topic'])]
@@ -66,7 +67,7 @@ def process_messages():
         if some_condition_to_stop():
             consumer_active = False
 
-    # Now, ensure the consumer is cleaned up manually, only if it's still active
+    # Ensure consumer is cleaned up if still active
     if consumer and not consumer.is_closed:
         try:
             logger.info("Cleaning up Kafka consumer...")
@@ -84,12 +85,12 @@ def start_consumer_thread():
 
 # Endpoint functions
 def get_listings(index): 
-    consumer = topic.get_simple_consumer(
+    consumer_local = topic.get_simple_consumer(
         reset_offset_on_start=True, 
         consumer_timeout_ms=5000
     )
     counter = 0
-    for msg in consumer:
+    for msg in consumer_local:
         message = msg.value.decode("utf-8")
         data = json.loads(message)
 
@@ -99,18 +100,18 @@ def get_listings(index):
                 return jsonify([data["payload"]]), 200
             counter += 1
     
-    consumer.stop()
+    consumer_local.stop()
 
     return {"message": f"No message at index {index}!"}, 404
 
 
 def get_bids(index): 
-    consumer = topic.get_simple_consumer(
+    consumer_local = topic.get_simple_consumer(
         reset_offset_on_start=True, 
         consumer_timeout_ms=5000
     )   
     counter = 0
-    for msg in consumer:
+    for msg in consumer_local:
 
         message = msg.value.decode("utf-8")
         data = json.loads(message)
@@ -120,27 +121,27 @@ def get_bids(index):
                 logger.info("Found message: bids")
                 return jsonify([data["payload"]]), 200  
             counter += 1
-    consumer.stop()
+    consumer_local.stop()
 
     return {"message": f"No message at index {index}!"}, 404
 
 
 def get_stats():
-    consumer = topic.get_simple_consumer(
+    consumer_local = topic.get_simple_consumer(
         reset_offset_on_start=True, 
         consumer_timeout_ms=5000
     )
     listings_counter = 0
     bids_counter = 0
 
-    for msg in consumer:
+    for msg in consumer_local:
 
         data = json.loads(msg.value.decode("utf-8"))
         if data["type"] == "listings":
             listings_counter += 1
         elif data["type"] == "bids":
             bids_counter += 1
-    consumer.stop()
+    consumer_local.stop()
 
     return {"Listings": listings_counter, "Bids": bids_counter}, 200
 
