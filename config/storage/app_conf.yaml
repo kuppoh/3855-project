@@ -7,5 +7,5 @@ datastore:
   db: real_estate
 events:
   hostname: "kafka"
-  port: 9092
+  port: 29092
   topic: "events"

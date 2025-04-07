@@ -3,6 +3,6 @@ server:
   port: 8080
 events:
   hostname: kafka
-  port: 9092
+  port:29092
   topic: events
 
