@@ -47,6 +47,7 @@ def get_listings(index):
             counter += 1
     
     consumer.stop()
+    logger.debug("Consumer stopped for get-listings successfully!")
 
     return {"message": f"No message at index {index}!"}, 404
 
@@ -68,7 +69,7 @@ def get_bids(index):
                 return jsonify([data["payload"]]), 200  
             counter += 1
     consumer.stop()
-
+    logger.debug("Consumer stopped for get-bids successfully!")
     return {"message": f"No message at index {index}!"}, 404
 
 
@@ -88,7 +89,7 @@ def get_stats():
         elif data["type"] == "bids":
             bids_counter += 1
     consumer.stop()
-
+    logger.debug("Consumer stopped for get-stats successfully!")
     return {"Listings": listings_counter, "Bids": bids_counter}, 200
 
 
