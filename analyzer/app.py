@@ -176,8 +176,10 @@ if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes":
 
 app.add_api("openapi.yaml", base_path="/analyzer", strict_validation=True, validate_responses=True)
 
+consumer_thread = Thread(target=consumer_polling, daemon=True)
+consumer_thread.start()
+
+
 if __name__ == "__main__":
-    consumer_thread = Thread(target=consumer_polling, daemon=True)
-    consumer_thread.start()
 
     app.run(port=8200, host="0.0.0.0")
