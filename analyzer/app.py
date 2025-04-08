@@ -31,6 +31,8 @@ topic = client.topics[app_config["events"]["topic"].encode()]
 
 # Endpoint functions
 def get_listings(index): 
+    logger.debug("Creating consumer for listings...")
+
     consumer = topic.get_simple_consumer(
         reset_offset_on_start=True, 
         consumer_timeout_ms=5000
@@ -53,6 +55,7 @@ def get_listings(index):
 
 
 def get_bids(index): 
+    logger.debug("Creating consumer for bids...")
     consumer = topic.get_simple_consumer(
         reset_offset_on_start=True, 
         consumer_timeout_ms=5000
@@ -74,6 +77,7 @@ def get_bids(index):
 
 
 def get_stats():
+    logger.debug("Creating consumer for stats...")
     consumer = topic.get_simple_consumer(
         reset_offset_on_start=True, 
         consumer_timeout_ms=5000
