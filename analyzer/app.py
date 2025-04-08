@@ -47,36 +47,44 @@ counter_lock = Lock()
 # Endpoint functions
 def get_listings(index):
     logger.debug("Creating consumer for listings...")
+
+    # Create consumer and subscribe to the topic
     consumer = create_consumer()
     consumer.subscribe([topic_name])
-    msg = consumer.poll(timeout=1.0)  # Poll once
-    logger.debug(f"Consumer assignment: {consumer.assignment()}")
 
-    if msg is None:
-        logger.debug("No message received.")
-        consumer.close()
-        logger.debug("Consumer closed for get-listings successfully!")
-        return {"message": f"No message at index {index}!"}, 404
+    counter = 0
 
-    if msg.error():
-        logger.error(f"Consumer error: {msg.error()}")
-        consumer.close()
-        logger.debug("Consumer closed for get-listings successfully!")
-        return {"message": "Error consuming message!"}, 500
+    while True:
+        msg = consumer.poll(timeout=1.0)  # Poll for a message
+        if msg is None:
+            logger.debug("No message received.")
+            continue
 
-    message = msg.value().decode('utf-8')
-    data = json.loads(message)
+        if msg.error():
+            logger.error(f"Consumer error: {msg.error()}")
+            continue
 
-    if data["type"] == "listings":
-        logger.info("Found message: listing")
-        consumer.close()
-        logger.debug("Consumer closed for get-listings successfully!")
-        return jsonify([data["payload"]]), 200
+        message = msg.value().decode("utf-8")
+        data = json.loads(message)
 
-    logger.debug("Message type is not 'listings' or wrong index.")
+        if data["type"] == "listings":
+            # Check if the current message matches the requested index
+            if counter == index:
+                logger.info(f"Found message: listings at index {index}")
+                consumer.close()  # Close consumer after processing
+                return jsonify([data["payload"]]), 200
+
+            counter += 1
+
+        # Stop polling after the specified index is reached
+        if counter > index:
+            break
+
+    # If no message is found at the specified index, close the consumer
     consumer.close()
     logger.debug("Consumer closed for get-listings successfully!")
     return {"message": f"No message at index {index}!"}, 404
+
 
 
 def get_bids(index):
