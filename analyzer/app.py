@@ -43,6 +43,8 @@ listings_counter = 0
 bids_counter = 0
 counter_lock = Lock()
 
+
+
 def consumer_polling():
     global listings_counter, bids_counter
     logger.debug("Starting persistent consumer...")
@@ -88,7 +90,8 @@ def get_listings(index):
 
     with counter_lock:  # Acquire lock to ensure no updates to the counter while checking
         if index >= listings_counter:
-
+            logger.debug("Index out of range for listings.")
+            consumer.close()  # Close the consumer to avoid it hanging
             logger.debug("Consumer closed for get-listings successfully!")
             return {"message": f"No message at index {index}!"}, 404
 
@@ -110,13 +113,15 @@ def get_listings(index):
         if data["type"] == "listings":
             if counter == index:
                 logger.info(f"Found message: listings at index {index}")
-
+                consumer.close()  # Close the consumer after use
                 return jsonify([data["payload"]]), 200
 
             counter += 1
 
+    consumer.close()  # Ensure consumer is closed at the end
     logger.debug("Consumer closed for get-listings successfully!")
     return {"message": f"No message at index {index}!"}, 404
+
 
 
 def get_bids(index):
@@ -126,7 +131,8 @@ def get_bids(index):
 
     with counter_lock:  # Ensure no other thread modifies the bids_counter while reading
         if index >= bids_counter:
-
+            logger.debug("Index out of range for bids.")
+            consumer.close()  # Close the consumer to avoid it hanging
             logger.debug("Consumer closed for get-bids successfully!")
             return {"message": f"No message at index {index}!"}, 404
 
@@ -148,13 +154,15 @@ def get_bids(index):
         if data["type"] == "bids":
             if counter == index:
                 logger.info(f"Found message: bids at index {index}")
+                consumer.close()  # Close the consumer after use
                 return jsonify([data["payload"]]), 200
 
             counter += 1
 
-
+    consumer.close()  # Ensure consumer is closed at the end
     logger.debug("Consumer closed for get-bids successfully!")
     return {"message": f"No message at index {index}!"}, 404
+
 
 
 def get_stats():
