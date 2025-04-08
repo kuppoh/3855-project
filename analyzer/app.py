@@ -154,10 +154,10 @@ def get_stats():
     global listings_counter, bids_counter
     logger.debug("Fetching stats...")
 
-        # Use the lock to safely read the counters
+    # Use the lock to safely read the counters
     with counter_lock:
+        logger.debug(f"Returning stats: Listings={listings_counter}, Bids={bids_counter}")
         return {"Listings": listings_counter, "Bids": bids_counter}, 200
-
 
 
 app = connexion.FlaskApp(__name__, specification_dir='')
