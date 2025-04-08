@@ -85,9 +85,6 @@ def consumer_polling():
 
 # Endpoint functions
 def get_listings(index):
-    # Ensure the consumer is subscribed to the topic before polling
-    consumer.subscribe([topic_name])  # This should ideally happen once when the consumer is initialized, not per request
-
     with counter_lock:  # Acquire lock to ensure no updates to the counter while checking
         if index >= listings_counter:
             logger.debug("Index out of range for listings.")
