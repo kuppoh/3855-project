@@ -164,7 +164,6 @@ def consumer_polling():
 
 
 def get_stats():
-    global listings_counter, bids_counter
     logger.debug("Fetching stats...")
 
     # Use the lock to safely read the counters
