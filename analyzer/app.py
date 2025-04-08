@@ -138,6 +138,7 @@ def consumer_polling():
         try:
             data = json.loads(msg.value().decode("utf-8"))
             logger.debug(f"Processing message: {data}")
+            logger.debug("Before entering the lock...")
             with counter_lock:
                 logger.debug(f"Inside lock: Before Update - Listings={listings_counter}, Bids={bids_counter}")
                 if data["type"] == "listings":
