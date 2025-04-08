@@ -162,15 +162,18 @@ def consumer_polling():
             logger.exception(f"Unexpected error while processing message: {e}")
 
 
-
 def get_stats():
     logger.debug("Fetching stats...")
+
+    # Sleep to give the consumer time to update the counters
+    time.sleep(0.5)
 
     # Use the lock to safely read the counters
     with counter_lock:
         logger.debug(f"Returning stats: Listings={listings_counter}, Bids={bids_counter}")
-        logger.debug(f"Final Listings: {listings_counter}, Bids: {bids_counter}")  # Add this line
+        logger.debug(f"Final Listings: {listings_counter}, Bids: {bids_counter}")
         return {"Listings": listings_counter, "Bids": bids_counter}, 200
+
 
 
 app = connexion.FlaskApp(__name__, specification_dir='')
