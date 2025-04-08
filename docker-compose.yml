@@ -1,6 +1,7 @@
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
     ports:
       - "22181:2181"
     volumes:
