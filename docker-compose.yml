@@ -5,7 +5,7 @@ services:
     ports:
       - "22181:2181"
     volumes:
-      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper_data:/var/lib/zookeeper/data
     healthcheck:
       test: ["CMD-SHELL", "echo mntr | nc localhost 2181"]
       interval: 10s
