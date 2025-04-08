@@ -10,8 +10,6 @@ from threading import Thread
 from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
 
-# app = FlaskApp(__name__)
-
 # Load configurations
 with open('./config/analyzer/app_conf.yaml', 'r') as f:
     app_config = yaml.safe_load(f.read())
@@ -53,7 +51,8 @@ def get_listings(index):
 
     return {"message": f"No message at index {index}!"}, 404
 
-
+ 
+ 
 def get_bids(index): 
     logger.debug("Creating consumer for bids...")
     consumer = topic.get_simple_consumer(
