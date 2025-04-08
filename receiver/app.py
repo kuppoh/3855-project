@@ -12,7 +12,7 @@ with open("./config/log_conf.yaml", "r") as f:
 
 logger = logging.getLogger('receiverLogger')
 
-# Kafka setup (Global Producer)
+
 kafka_config = {
     'bootstrap.servers': f"{app_config['events']['hostname']}:{app_config['events']['port']}"
 }
