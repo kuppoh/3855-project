@@ -4,7 +4,7 @@ from connexion import NoContent
 from database import make_session
 from sqlalchemy import select
 from models import listings, bids, Base
-from confluent_kafka import Consumer, Producer, KafkaError  # Use Confluent Kafka library
+from confluent_kafka import Consumer, KafkaError  # Updated to use Confluent Kafka
 from threading import Thread
 from commands import create_tables, drop_tables
 from database import engine
@@ -20,7 +20,6 @@ logger = logging.getLogger('storageLogger')
 
 
 def process_messages():
-    # Kafka configuration
     kafka_config = {
         'bootstrap.servers': f"{app_config['events']['hostname']}:{app_config['events']['port']}",
         'group.id': 'event_group',
@@ -29,11 +28,9 @@ def process_messages():
 
     logger.info(f"Connecting to Kafka: {kafka_config['bootstrap.servers']}.")
     consumer = Consumer(kafka_config)
+    consumer.subscribe([app_config['events']['topic']])
 
-    topic = app_config['events']['topic']
-    consumer.subscribe([topic])
-
-    logger.info("Consumer subscribed. Waiting for messages...")
+    logger.info("Consumer created and subscribed. Waiting for messages...")
 
     while True:
         msg = consumer.poll(1.0)  # Timeout of 1 second
@@ -51,10 +48,10 @@ def process_messages():
         logger.info("Message: %s" % msg)
         payload = msg["payload"]
 
-        if msg["type"] == "listings":  # Change this to your event type
+        if msg["type"] == "listings":
             logger.info("Processing listings event: %s", payload)
             post_listing(payload)
-        elif msg["type"] == "bids":  # Change this to your event type
+        elif msg["type"] == "bids":
             logger.info("Processing bids event: %s", payload)
             post_bid(payload)
 
@@ -101,6 +98,62 @@ def post_bid(body):
     return NoContent, 201
 
 
+def get_listings(start_timestamp, end_timestamp):
+    session = make_session()
+
+    start = datetime.strptime(start_timestamp, "%Y-%m-%d %H:%M:%S")
+    end = datetime.strptime(end_timestamp, "%Y-%m-%d %H:%M:%S")
+
+    statement = select(listings).where(listings.listing_post >= start).where(listings.listing_post < end)
+
+    result = [
+        {
+            "listing_id": row.listing_id,
+            "listing_price": row.listing_price,
+            "listing_post": row.listing_post,
+            "listing_type": row.listing_type,
+            "listing_status": row.listing_status.value,
+            "listing_contact": row.listing_contact,
+            "trace_id": row.trace_id
+        }
+        for row in session.execute(statement).scalars().all()
+    ]
+
+    session.close()
+
+    logger.info("Found %d listings (start: %s | end: %s)", len(result), start, end)
+    return result
+
+
+def get_bids(start_timestamp, end_timestamp):
+    session = make_session()
+
+    start = datetime.strptime(start_timestamp, "%Y-%m-%d %H:%M:%S")
+    end = datetime.strptime(end_timestamp, "%Y-%m-%d %H:%M:%S")
+
+    statement = select(bids).where(bids.offer_date >= start).where(bids.offer_date < end)
+
+    result = [
+        {
+            "bidding_id": row.bidding_id,
+            "listing_id": row.listing_id,
+            "asking_price": row.asking_price,
+            "offer_price": row.offer_price,
+            "offer_date": row.offer_date,
+            "property_square_feet": row.property_square_feet,
+            "price_per_square_feet": row.price_per_square_feet,
+            "bid_status": row.bid_status.value,
+            "trace_id": row.trace_id
+        }
+        for row in session.execute(statement).scalars().all()
+    ]
+
+    session.close()
+
+    logger.info("Found %d bids (start: %s | end: %s)", len(result), start, end)
+    return result
+
+
 def setup_kafka_thread():
     logger.info("Setting up Kafka consumer thread")
     t1 = Thread(target=process_messages)
@@ -108,11 +161,12 @@ def setup_kafka_thread():
     t1.start()
     logger.info("Consumer setup done.")
 
+
 app = connexion.FlaskApp(__name__, specification_dir='')
 app.add_api("openapi.yaml",
-  base_path="/storage",
-  strict_validation=True,
-  validate_responses=True)
+            base_path="/storage",
+            strict_validation=True,
+            validate_responses=True)
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "reset":
