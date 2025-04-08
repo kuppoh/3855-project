@@ -113,9 +113,10 @@ def get_stats():
     consumer = create_consumer()
     consumer.subscribe(
         ['events'],
-        on_assign=lambda c, partitions: logger.debug(f"Assigned partitions: {partitions}")
+        on_assign=lambda c, partitions: logger.debug(f"Assigned partitions: {partitions}"),
+        on_revoke=lambda c, partitions: logger.debug(f"Revoked partitions: {partitions}")
     )
-
+    logger.debug(f"Subscribed topics: {consumer.subscription()}")
 
     listings_counter = 0
     bids_counter = 0
