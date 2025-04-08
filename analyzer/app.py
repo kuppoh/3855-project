@@ -1,13 +1,15 @@
-import connexion, json, datetime, logging.config, yaml, os, time
+import connexion
+import json
+import logging.config
+import yaml
+import os
+import time
 from flask import jsonify
-from datetime import datetime
-from connexion import NoContent, FlaskApp
-from sqlalchemy import select
-from confluent_kafka import Consumer, Producer
 from threading import Thread, Lock
-
-from connexion.middleware import MiddlewarePosition
+from confluent_kafka import Consumer, KafkaException
+from queue import Queue
 from starlette.middleware.cors import CORSMiddleware
+from connexion.middleware import MiddlewarePosition
 
 # Load configurations
 with open('./config/analyzer/app_conf.yaml', 'r') as f:
@@ -18,7 +20,7 @@ with open("./config/log_conf.yaml", "r") as f:
     logging.config.dictConfig(LOG_CONFIG)
 
 logger = logging.getLogger('analyzerLogger')
-logger.debug("Logging is set up...") 
+logger.debug("Logging is set up...")
 
 # Kafka setup
 hostname = app_config['events']['hostname']
@@ -30,28 +32,24 @@ print(f'{hostname}:{port}')
 kafka_config = {
     'bootstrap.servers': f'{hostname}:{port}',
     'group.id': 'analyzer_group',
-    'auto.offset.reset': 'earliest',  # Start consuming from the beginning
+    'auto.offset.reset': 'earliest',
     'enable.auto.commit': True,
     'session.timeout.ms': 30000
 }
 
-
-# Create a global Kafka consumer
-def create_consumer():
-    return Consumer(kafka_config)
-
+# Create a global Kafka consumer and message queue
+message_queue = Queue()
+counter_lock = Lock()
 listings_counter = 0
 bids_counter = 0
-counter_lock = Lock()
 
-
+# Global consumer
+consumer = Consumer(kafka_config)
+consumer.subscribe([topic_name])
 
 def consumer_polling():
     global listings_counter, bids_counter
     logger.debug("Starting persistent consumer...")
-    consumer = create_consumer()
-    consumer.subscribe([topic_name])
-
     while True:
         msg = consumer.poll(timeout=1.0)
         if msg is None:
@@ -76,96 +74,52 @@ def consumer_polling():
             logger.debug(f"Inside lock: Listings={listings_counter}, Bids={bids_counter}")
             if msg_type == "listings":
                 listings_counter += 1
-                logger.info(f"Listings counter incremented: {listings_counter}")
             elif msg_type == "bids":
                 bids_counter += 1
-                logger.info(f"Bids counter incremented: {bids_counter}")
-            else:
-                logger.warning(f"Unknown message type: {msg_type}")
 
-# Endpoint functions
+        # Place message into the queue
+        message_queue.put(data)
+
 def get_listings(index):
+    global listings_counter
     with counter_lock:
         if index >= listings_counter:
             logger.debug("Index out of range for listings.")
             return {"message": f"No message at index {index}!"}, 404
 
     counter = 0
-    while True:
-        msg = consumer.poll(timeout=1.0)
-
-        if msg is None:
-            logger.debug("No message received.")
-            continue
-
-        if msg.error():
-            logger.error(f"Consumer error: {msg.error()}")
-            break
-
-        message = msg.value().decode('utf-8')
-        data = json.loads(message)
-
-        if data["type"] == "listings":
+    while not message_queue.empty():
+        message = message_queue.get_nowait()  # Non-blocking
+        if message["type"] == "listings":
             if counter == index:
-                logger.info(f"Found message: listings at index {index}")
-                return jsonify([data["payload"]]), 200
-
+                return jsonify([message["payload"]]), 200
             counter += 1
-
-    logger.debug("No message found at the requested index.")
     return {"message": f"No message at index {index}!"}, 404
 
-
-
-
 def get_bids(index):
-    with counter_lock:  # Ensure no other thread modifies the bids_counter while reading
+    global bids_counter
+    with counter_lock:
         if index >= bids_counter:
             logger.debug("Index out of range for bids.")
-            logger.debug("Consumer closed for get-bids successfully!")
             return {"message": f"No message at index {index}!"}, 404
 
     counter = 0
-    while True:
-        msg = consumer.poll(timeout=1.0)
-
-        if msg is None:
-            logger.debug("No message received.")
-            continue
-
-        if msg.error():
-            logger.error(f"Consumer error: {msg.error()}")
-            break
-
-        message = msg.value().decode('utf-8')
-        data = json.loads(message)
-
-        if data["type"] == "bids":
+    while not message_queue.empty():
+        message = message_queue.get_nowait()  # Non-blocking
+        if message["type"] == "bids":
             if counter == index:
-                logger.info(f"Found message: bids at index {index}")
-                return jsonify([data["payload"]]), 200
-
+                return jsonify([message["payload"]]), 200
             counter += 1
-
-    logger.debug("Consumer closed for get-bids successfully!")
     return {"message": f"No message at index {index}!"}, 404
-
-
 
 def get_stats():
     logger.debug("Fetching stats...")
-
-    # Sleep to give the consumer time to update the counters
-    time.sleep(0.5)
-
     with counter_lock:
         logger.debug(f"Returning stats: Listings={listings_counter}, Bids={bids_counter}")
         return {"Listings": listings_counter, "Bids": bids_counter}, 200
 
-
-
+# Setup Connexion app
 app = connexion.FlaskApp(__name__, specification_dir='')
-
 if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes":
     app.add_middleware(
         CORSMiddleware,
@@ -178,6 +132,7 @@ if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes":
 
 app.add_api("openapi.yaml", base_path="/analyzer", strict_validation=True, validate_responses=True)
 
+# Start consumer thread
 consumer_thread = Thread(target=consumer_polling, daemon=True)
 consumer_thread.start()
 
