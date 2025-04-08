@@ -113,6 +113,7 @@ listings_counter = 0
 bids_counter = 0
 counter_lock = Lock()
 
+
 def consumer_polling():
     global listings_counter, bids_counter
     logger.debug("Starting persistent consumer...")
@@ -124,7 +125,7 @@ def consumer_polling():
         on_revoke=lambda c, partitions: logger.debug(f"Revoked partitions: {partitions}")
     )
 
-    while True:  # Continuously poll for messages
+    while True:
         msg = consumer.poll(timeout=1.0)
         if msg is None:
             logger.debug("No messages fetched in this poll cycle.")
@@ -134,22 +135,31 @@ def consumer_polling():
             logger.error(f"Consumer error: {msg.error()}")
             continue
 
-        # Process the message and update global counters
         try:
-            data = json.loads(msg.value().decode("utf-8"))
-            logger.debug(f"Processing message: {data}")
-            logger.debug("Before entering the lock...")
+            raw_value = msg.value().decode("utf-8")
+            logger.debug(f"Raw message received: {raw_value}")
+            data = json.loads(raw_value)
+
+            msg_type = data.get("type")
+            if not msg_type:
+                logger.warning("Message missing 'type' field.")
+                continue
+
             with counter_lock:
-                logger.debug(f"Inside lock: Before Update - Listings={listings_counter}, Bids={bids_counter}")
-                if data["type"] == "listings":
+                logger.debug(f"Inside lock: Listings={listings_counter}, Bids={bids_counter}")
+                if msg_type == "listings":
                     listings_counter += 1
-                    logger.debug(f"Incremented listings_counter: {listings_counter}")
-                elif data["type"] == "bids":
+                    logger.info(f"Listings counter incremented: {listings_counter}")
+                elif msg_type == "bids":
                     bids_counter += 1
-                    logger.debug(f"Incremented bids_counter: {bids_counter}")
+                    logger.info(f"Bids counter incremented: {bids_counter}")
+                else:
+                    logger.warning(f"Unknown message type: {msg_type}")
+
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to decode message: {msg.value()} - {e}")
-            continue
+            logger.error(f"JSON decode failed: {e} | Raw message: {msg.value()}")
+        except Exception as e:
+            logger.exception(f"Unexpected error while processing message: {e}")
 
 
 
