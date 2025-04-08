@@ -43,78 +43,6 @@ listings_counter = 0
 bids_counter = 0
 counter_lock = Lock()
 
-
-# Endpoint functions
-def get_listings(index):
-    logger.debug("Creating consumer for listings...")
-    consumer = create_consumer()
-    consumer.subscribe([topic_name])
-    
-    counter = 0  # Keep track of the index
-
-    while True:
-        msg = consumer.poll(timeout=1.0)  # Poll for a message
-
-        if msg is None:
-            logger.debug("No message received.")
-            continue
-
-        if msg.error():
-            logger.error(f"Consumer error: {msg.error()}")
-            break
-
-        message = msg.value().decode('utf-8')
-        data = json.loads(message)
-
-        # Check if the message is a 'listings' message
-        if data["type"] == "listings":
-            # Check if this is the message at the requested index
-            if counter == index:
-                logger.info(f"Found message: listings at index {index}")
-                consumer.close()
-                return jsonify([data["payload"]]), 200
-
-            counter += 1
-
-    consumer.close()
-    logger.debug("Consumer closed for get-listings successfully!")
-    return {"message": f"No message at index {index}!"}, 404
-
-
-def get_bids(index):
-    logger.debug("Creating consumer for bids...")
-    consumer = create_consumer()
-    consumer.subscribe([topic_name])
-    msg = consumer.poll(timeout=1.0)  # Poll once    
-    logger.debug(f"Consumer assignment: {consumer.assignment()}")
-
-    if msg is None:
-        logger.debug("No message received.")
-        consumer.close()
-        logger.debug("Consumer closed for get-bids successfully!")
-        return {"message": f"No message at index {index}!"}, 404
-
-    if msg.error():
-        logger.error(f"Consumer error: {msg.error()}")
-        consumer.close()
-        logger.debug("Consumer closed for get-bids successfully!")
-        return {"message": "Error consuming message!"}, 500
-
-    message = msg.value().decode('utf-8')
-    data = json.loads(message)
-
-    if data["type"] == "bids":
-        logger.info("Found message: bids")
-        consumer.close()
-        logger.debug("Consumer closed for get-bids successfully!")
-        return jsonify([data["payload"]]), 200
-
-    logger.debug("Message type is not 'bids' or wrong index.")
-    consumer.close()
-    logger.debug("Consumer closed for get-bids successfully!")
-    return {"message": f"No message at index {index}!"}, 404
-
-
 def consumer_polling():
     global listings_counter, bids_counter
     logger.debug("Starting persistent consumer...")
@@ -151,6 +79,85 @@ def consumer_polling():
                 logger.info(f"Bids counter incremented: {bids_counter}")
             else:
                 logger.warning(f"Unknown message type: {msg_type}")
+
+# Endpoint functions
+def get_listings(index):
+    logger.debug("Creating consumer for listings...")
+    consumer = create_consumer()
+    consumer.subscribe([topic_name])
+
+    with counter_lock:  # Acquire lock to ensure no updates to the counter while checking
+        if index >= listings_counter:
+            consumer.close()
+            logger.debug("Consumer closed for get-listings successfully!")
+            return {"message": f"No message at index {index}!"}, 404
+
+    counter = 0
+    while True:
+        msg = consumer.poll(timeout=1.0)
+
+        if msg is None:
+            logger.debug("No message received.")
+            continue
+
+        if msg.error():
+            logger.error(f"Consumer error: {msg.error()}")
+            break
+
+        message = msg.value().decode('utf-8')
+        data = json.loads(message)
+
+        if data["type"] == "listings":
+            if counter == index:
+                logger.info(f"Found message: listings at index {index}")
+                consumer.close()
+                return jsonify([data["payload"]]), 200
+
+            counter += 1
+
+    consumer.close()
+    logger.debug("Consumer closed for get-listings successfully!")
+    return {"message": f"No message at index {index}!"}, 404
+
+
+def get_bids(index):
+    logger.debug("Creating consumer for bids...")
+    consumer = create_consumer()
+    consumer.subscribe([topic_name])
+
+    with counter_lock:  # Ensure no other thread modifies the bids_counter while reading
+        if index >= bids_counter:
+            consumer.close()
+            logger.debug("Consumer closed for get-bids successfully!")
+            return {"message": f"No message at index {index}!"}, 404
+
+    counter = 0
+    while True:
+        msg = consumer.poll(timeout=1.0)
+
+        if msg is None:
+            logger.debug("No message received.")
+            continue
+
+        if msg.error():
+            logger.error(f"Consumer error: {msg.error()}")
+            break
+
+        message = msg.value().decode('utf-8')
+        data = json.loads(message)
+
+        if data["type"] == "bids":
+            if counter == index:
+                logger.info(f"Found message: bids at index {index}")
+                consumer.close()
+                return jsonify([data["payload"]]), 200
+
+            counter += 1
+
+    consumer.close()
+    logger.debug("Consumer closed for get-bids successfully!")
+    return {"message": f"No message at index {index}!"}, 404
+
 
 def get_stats():
     logger.debug("Fetching stats...")
