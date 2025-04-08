@@ -88,7 +88,7 @@ def get_listings(index):
 
     with counter_lock:  # Acquire lock to ensure no updates to the counter while checking
         if index >= listings_counter:
-            consumer.close()
+
             logger.debug("Consumer closed for get-listings successfully!")
             return {"message": f"No message at index {index}!"}, 404
 
@@ -110,12 +110,11 @@ def get_listings(index):
         if data["type"] == "listings":
             if counter == index:
                 logger.info(f"Found message: listings at index {index}")
-                consumer.close()
+
                 return jsonify([data["payload"]]), 200
 
             counter += 1
 
-    consumer.close()
     logger.debug("Consumer closed for get-listings successfully!")
     return {"message": f"No message at index {index}!"}, 404
 
@@ -127,7 +126,7 @@ def get_bids(index):
 
     with counter_lock:  # Ensure no other thread modifies the bids_counter while reading
         if index >= bids_counter:
-            consumer.close()
+
             logger.debug("Consumer closed for get-bids successfully!")
             return {"message": f"No message at index {index}!"}, 404
 
@@ -149,12 +148,11 @@ def get_bids(index):
         if data["type"] == "bids":
             if counter == index:
                 logger.info(f"Found message: bids at index {index}")
-                consumer.close()
                 return jsonify([data["payload"]]), 200
 
             counter += 1
 
-    consumer.close()
+
     logger.debug("Consumer closed for get-bids successfully!")
     return {"message": f"No message at index {index}!"}, 404
 
@@ -187,7 +185,6 @@ app.add_api("openapi.yaml", base_path="/analyzer", strict_validation=True, valid
 
 consumer_thread = Thread(target=consumer_polling, daemon=True)
 consumer_thread.start()
-
 
 if __name__ == "__main__":
     app.run(port=8200, host="0.0.0.0")
