@@ -39,6 +39,9 @@ kafka_config = {
 def create_consumer():
     return Consumer(kafka_config)
 
+listings_counter = 0
+bids_counter = 0
+counter_lock = Lock()
 
 
 # Endpoint functions
@@ -109,9 +112,6 @@ def get_bids(index):
     logger.debug("Consumer closed for get-bids successfully!")
     return {"message": f"No message at index {index}!"}, 404
 
-listings_counter = 0
-bids_counter = 0
-counter_lock = Lock()
 
 def consumer_polling():
     global listings_counter, bids_counter
