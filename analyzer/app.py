@@ -31,7 +31,8 @@ kafka_config = {
     'bootstrap.servers': f'{hostname}:{port}',
     'group.id': 'analyzer_group',
     'auto.offset.reset': 'earliest',  # Start consuming from the beginning
-    'enable.auto.commit': True
+    'enable.auto.commit': True,
+    'session.timeout.ms': 30000
 }
 
 
