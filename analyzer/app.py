@@ -108,8 +108,11 @@ def get_bids(index):
 def get_stats():
     logger.debug("Creating consumer for stats...")
     consumer = create_consumer()
-    consumer.subscribe([topic_name])
-    logger.debug(f"Consumer assignment: {consumer.assignment()}")
+    consumer.subscribe(
+        ['events'],
+        on_assign=lambda c, partitions: logger.debug(f"Assigned partitions: {partitions}")
+    )
+
 
     listings_counter = 0
     bids_counter = 0
