@@ -40,7 +40,7 @@ def get_listings(index):
     logger.debug("Creating consumer for listings...")
     consumer = create_consumer()
     consumer.subscribe([topic_name])
-    logger.debug(f"Consumer subscription: {consumer.subscription()}")
+    logger.debug(f"Consumer assignment: {consumer.assignment()}")
 
     msg = consumer.poll(timeout=1.0)  # Poll once
     if msg is None:
@@ -74,7 +74,7 @@ def get_bids(index):
     logger.debug("Creating consumer for bids...")
     consumer = create_consumer()
     consumer.subscribe([topic_name])
-    logger.debug(f"Consumer subscription: {consumer.subscription()}")
+    logger.debug(f"Consumer assignment: {consumer.assignment()}")
 
     msg = consumer.poll(timeout=1.0)  # Poll once
     if msg is None:
@@ -108,7 +108,7 @@ def get_stats():
     logger.debug("Creating consumer for stats...")
     consumer = create_consumer()
     consumer.subscribe([topic_name])
-    logger.debug(f"Consumer subscription: {consumer.subscription()}")
+    logger.debug(f"Consumer assignment: {consumer.assignment()}")
 
     listings_counter = 0
     bids_counter = 0
