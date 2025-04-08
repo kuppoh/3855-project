@@ -41,26 +41,30 @@ def get_listings(index):
     consumer = create_consumer()
     consumer.subscribe([topic_name])
     logger.debug(f"Consumer: {consumer}")
-    
-    counter = 0
-    while True:
-        msg = consumer.poll(timeout=1.0)
-        if msg is None:
-            break  # No more messages to fetch
-        if msg.error():
-            logger.error(f"Consumer error: {msg.error()}")
-            continue
-        
-        message = msg.value().decode('utf-8')
-        data = json.loads(message)
 
-        if data["type"] == "listings":
-            if counter == index:
-                logger.info("Found message: listing")
-                consumer.close()
-                return jsonify([data["payload"]]), 200
-            counter += 1
-    
+    msg = consumer.poll(timeout=1.0)  # Poll once
+    if msg is None:
+        logger.debug("No message received.")
+        consumer.close()
+        logger.debug("Consumer closed for get-listings successfully!")
+        return {"message": f"No message at index {index}!"}, 404
+
+    if msg.error():
+        logger.error(f"Consumer error: {msg.error()}")
+        consumer.close()
+        logger.debug("Consumer closed for get-listings successfully!")
+        return {"message": "Error consuming message!"}, 500
+
+    message = msg.value().decode('utf-8')
+    data = json.loads(message)
+
+    if data["type"] == "listings" and index == 0:
+        logger.info("Found message: listing")
+        consumer.close()
+        logger.debug("Consumer closed for get-listings successfully!")
+        return jsonify([data["payload"]]), 200
+
+    logger.debug("Message type is not 'listings' or wrong index.")
     consumer.close()
     logger.debug("Consumer closed for get-listings successfully!")
     return {"message": f"No message at index {index}!"}, 404
@@ -71,26 +75,30 @@ def get_bids(index):
     consumer = create_consumer()
     consumer.subscribe([topic_name])
     logger.debug(f"Consumer: {consumer}")
-    
-    counter = 0
-    while True:
-        msg = consumer.poll(timeout=1.0)
-        if msg is None:
-            break
-        if msg.error():
-            logger.error(f"Consumer error: {msg.error()}")
-            continue
-        
-        message = msg.value().decode('utf-8')
-        data = json.loads(message)
 
-        if data["type"] == "bids":
-            if counter == index:
-                logger.info("Found message: bids")
-                consumer.close()
-                return jsonify([data["payload"]]), 200
-            counter += 1
-    
+    msg = consumer.poll(timeout=1.0)  # Poll once
+    if msg is None:
+        logger.debug("No message received.")
+        consumer.close()
+        logger.debug("Consumer closed for get-bids successfully!")
+        return {"message": f"No message at index {index}!"}, 404
+
+    if msg.error():
+        logger.error(f"Consumer error: {msg.error()}")
+        consumer.close()
+        logger.debug("Consumer closed for get-bids successfully!")
+        return {"message": "Error consuming message!"}, 500
+
+    message = msg.value().decode('utf-8')
+    data = json.loads(message)
+
+    if data["type"] == "bids" and index == 0:
+        logger.info("Found message: bids")
+        consumer.close()
+        logger.debug("Consumer closed for get-bids successfully!")
+        return jsonify([data["payload"]]), 200
+
+    logger.debug("Message type is not 'bids' or wrong index.")
     consumer.close()
     logger.debug("Consumer closed for get-bids successfully!")
     return {"message": f"No message at index {index}!"}, 404
@@ -101,27 +109,32 @@ def get_stats():
     consumer = create_consumer()
     consumer.subscribe([topic_name])
     logger.debug(f"Consumer: {consumer}")
-    
+
+    msg = consumer.poll(timeout=1.0)  # Poll once
+    if msg is None:
+        logger.debug("No message received.")
+        consumer.close()
+        logger.debug("Consumer closed for get-stats successfully!")
+        return {"Listings": 0, "Bids": 0}, 200
+
+    if msg.error():
+        logger.error(f"Consumer error: {msg.error()}")
+        consumer.close()
+        logger.debug("Consumer closed for get-stats successfully!")
+        return {"message": "Error consuming message!"}, 500
+
+    data = json.loads(msg.value().decode('utf-8'))
+
     listings_counter = 0
     bids_counter = 0
-    while True:
-        msg = consumer.poll(timeout=1.0)
-        if msg is None:
-            break
-        if msg.error():
-            logger.error(f"Consumer error: {msg.error()}")
-            continue
-        
-        data = json.loads(msg.value().decode('utf-8'))
-        if data["type"] == "listings":
-            listings_counter += 1
-        elif data["type"] == "bids":
-            bids_counter += 1
-    
+    if data["type"] == "listings":
+        listings_counter += 1
+    elif data["type"] == "bids":
+        bids_counter += 1
+
     consumer.close()
     logger.debug("Consumer closed for get-stats successfully!")
     return {"Listings": listings_counter, "Bids": bids_counter}, 200
-
 
 app = connexion.FlaskApp(__name__, specification_dir='')
 
