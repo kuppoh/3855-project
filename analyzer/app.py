@@ -164,6 +164,7 @@ def consumer_polling():
 
 def get_stats():
     logger.debug("Fetching stats...")
+    print(f"listings:{listings_counter} and bids:{bids_counter}")
 
     # Sleep to give the consumer time to update the counters
     time.sleep(0.5)
