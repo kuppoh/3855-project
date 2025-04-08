@@ -139,6 +139,7 @@ def consumer_polling():
             data = json.loads(msg.value().decode("utf-8"))
             logger.debug(f"Processing message: {data}")
             with counter_lock:
+                logger.debug(f"Inside lock: Before Update - Listings={listings_counter}, Bids={bids_counter}")
                 if data["type"] == "listings":
                     listings_counter += 1
                     logger.debug(f"Incremented listings_counter: {listings_counter}")
