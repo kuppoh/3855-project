@@ -7,7 +7,6 @@ import time
 from flask import jsonify
 from threading import Thread, Lock
 from confluent_kafka import Consumer, KafkaException
-from queue import Queue
 from starlette.middleware.cors import CORSMiddleware
 from connexion.middleware import MiddlewarePosition
 
@@ -37,8 +36,8 @@ kafka_config = {
     'session.timeout.ms': 30000
 }
 
-# Create a global Kafka consumer and message queue
-message_queue = Queue()
+# Create a global Kafka consumer and message store (list)
+messages_store = []  # Persistent in-memory store for messages
 counter_lock = Lock()
 listings_counter = 0
 bids_counter = 0
@@ -77,8 +76,8 @@ def consumer_polling():
             elif msg_type == "bids":
                 bids_counter += 1
 
-        # Place message into the queue
-        message_queue.put(data)
+        # Store message in the messages store
+        messages_store.append(data)
 
 def get_listings(index):
     global listings_counter
@@ -88,8 +87,7 @@ def get_listings(index):
             return {"message": f"No message at index {index}!"}, 404
 
     counter = 0
-    while not message_queue.empty():
-        message = message_queue.get_nowait()  # Non-blocking
+    for message in messages_store:
         if message["type"] == "listings":
             if counter == index:
                 return jsonify([message["payload"]]), 200
@@ -104,8 +102,7 @@ def get_bids(index):
             return {"message": f"No message at index {index}!"}, 404
 
     counter = 0
-    while not message_queue.empty():
-        message = message_queue.get_nowait()  # Non-blocking
+    for message in messages_store:
         if message["type"] == "bids":
             if counter == index:
                 return jsonify([message["payload"]]), 200
