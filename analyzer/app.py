@@ -27,7 +27,7 @@ topic_name = app_config["events"]["topic"]
 
 kafka_config = {
     'bootstrap.servers': f"{hostname}:{port}",
-    'group.id': 'analyzer_group', # needed...
+    'group.id': 'event_group', # needed...
     'auto.offset.reset': 'earliest'
 }
 
@@ -40,9 +40,9 @@ def get_listings(index):
     logger.debug("Creating consumer for listings...")
     consumer = create_consumer()
     consumer.subscribe([topic_name])
+    msg = consumer.poll(timeout=1.0)  # Poll once
     logger.debug(f"Consumer assignment: {consumer.assignment()}")
 
-    msg = consumer.poll(timeout=1.0)  # Poll once
     if msg is None:
         logger.debug("No message received.")
         consumer.close()
@@ -74,9 +74,9 @@ def get_bids(index):
     logger.debug("Creating consumer for bids...")
     consumer = create_consumer()
     consumer.subscribe([topic_name])
+    msg = consumer.poll(timeout=1.0)  # Poll once    
     logger.debug(f"Consumer assignment: {consumer.assignment()}")
 
-    msg = consumer.poll(timeout=1.0)  # Poll once
     if msg is None:
         logger.debug("No message received.")
         consumer.close()
