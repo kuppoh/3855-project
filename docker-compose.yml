@@ -1,17 +1,16 @@
 services:
   zookeeper:
-    image: wurstmeister/zookeeper
-    container_name: zookeeper
+    image: confluentinc/cp-zookeeper:latest
     ports:
       - "22181:2181"
     volumes:
-      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper-data:/var/lib/zookeeper/data
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "2181"]
-      interval: 30s
+      test: ["CMD-SHELL", "echo mntr | nc localhost 2181"]
+      interval: 10s
+      timeout: 5s
       retries: 3
       start_period: 10s
-      timeout: 10s
     networks:
       - my_network
     
