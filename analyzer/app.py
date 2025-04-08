@@ -25,6 +25,8 @@ hostname = app_config['events']['hostname']
 port = app_config['events']['port']
 topic_name = app_config["events"]["topic"]
 
+print(f'{hostname}:{port}')
+
 kafka_config = {
     'bootstrap.servers': f'{hostname}:{port}',
     'group.id': 'event_group',
