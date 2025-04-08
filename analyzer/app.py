@@ -169,6 +169,7 @@ def get_stats():
     # Use the lock to safely read the counters
     with counter_lock:
         logger.debug(f"Returning stats: Listings={listings_counter}, Bids={bids_counter}")
+        logger.debug(f"Final Listings: {listings_counter}, Bids: {bids_counter}")  # Add this line
         return {"Listings": listings_counter, "Bids": bids_counter}, 200
 
 
