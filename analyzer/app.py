@@ -143,7 +143,7 @@ def get_stats():
     logger.debug("Creating consumer for stats...")
     consumer = create_consumer()
     consumer.subscribe(
-        ['events'],
+        [topic_name],
         on_assign=lambda c, partitions: logger.debug(f"Assigned partitions: {partitions}"),
         on_revoke=lambda c, partitions: logger.debug(f"Revoked partitions: {partitions}")
     )
