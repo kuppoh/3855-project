@@ -28,6 +28,7 @@ topic_name = app_config["events"]["topic"]
 kafka_config = {
     'bootstrap.servers': f"{hostname}:{port}",
     'group.id': 'event_group', # needed...
+    'enable.auto.commit': True,
     'auto.offset.reset': 'earliest'
 }
 
