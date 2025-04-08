@@ -29,7 +29,7 @@ print(f'{hostname}:{port}')
 
 kafka_config = {
     'bootstrap.servers': f'{hostname}:{port}',
-    'group.id': 'event_group',
+    'group.id': 'analyzer_group',
     'auto.offset.reset': 'earliest',  # Start consuming from the beginning
     'enable.auto.commit': True
 }
@@ -122,7 +122,6 @@ def get_stats():
 
     while True:  # Continuously poll for messages
         msg = consumer.poll(timeout=1.0)
-        logger.debug(f"Raw Kafka message: {msg.value()}")
 
         if msg is None:
             logger.debug("No more messages available.")
