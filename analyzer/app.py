@@ -122,6 +122,7 @@ def get_stats():
 
     while True:  # Continuously poll for messages
         msg = consumer.poll(timeout=1.0)
+        logger.debug(f"Raw Kafka message: {msg.value()}")
 
         if msg is None:
             logger.debug("No more messages available.")
