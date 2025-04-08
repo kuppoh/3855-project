@@ -4,8 +4,7 @@ from datetime import datetime
 from connexion import NoContent, FlaskApp
 from sqlalchemy import select
 from confluent_kafka import Consumer, Producer
-from queue import Queue # this is so that i can sync consuming_poll with get_stats
-from threading import Thread
+from threading import Thread, Lock
 
 from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
@@ -110,10 +109,12 @@ def get_bids(index):
     logger.debug("Consumer closed for get-bids successfully!")
     return {"message": f"No message at index {index}!"}, 404
 
-
-counter_queue = Queue()
+listings_counter = 0
+bids_counter = 0
+counter_lock = Lock()
 
 def consumer_polling():
+    global listings_counter, bids_counter
     logger.debug("Starting persistent consumer...")
     consumer = create_consumer()
 
@@ -122,9 +123,6 @@ def consumer_polling():
         on_assign=lambda c, partitions: logger.debug(f"Assigned partitions: {partitions}"),
         on_revoke=lambda c, partitions: logger.debug(f"Revoked partitions: {partitions}")
     )
-
-    listings = 0
-    bids = 0
 
     while True:  # Continuously poll for messages
         msg = consumer.poll(timeout=1.0)
@@ -136,36 +134,29 @@ def consumer_polling():
             logger.error(f"Consumer error: {msg.error()}")
             continue
 
-        # Process the message and update counters
+        # Process the message and update global counters
         try:
             data = json.loads(msg.value().decode("utf-8"))
             logger.debug(f"Processing message: {data}")
 
             if data["type"] == "listings":
-                listings += 1
-                logger.debug(f"Incremented listings counter locally: {listings}")
+                listings_counter += 1
+                logger.debug(f"Incremented listings_counter: {listings_counter}")
             elif data["type"] == "bids":
-                bids += 1
-                logger.debug(f"Incremented bids counter locally: {bids}")
-
-            # Update the queue with new values
-            counter_queue.put({"listings": listings, "bids": bids})
+                bids_counter += 1
+                logger.debug(f"Incremented bids_counter: {bids_counter}")
         except json.JSONDecodeError as e:
             logger.error(f"Failed to decode message: {msg.value()} - {e}")
             continue
 
 
-
-
 def get_stats():
-    logger.debug("Fetching stats...")
+    global listings_counter, bids_counter
+        logger.debug("Fetching stats...")
 
-    # Get the latest counters from the queue
-    counters = {"Listings": 0, "Bids": 0}
-    while not counter_queue.empty():
-        counters = counter_queue.get()
-
-    return counters, 200
+        # Use the lock to safely read the counters
+        with counter_lock:
+            return {"Listings": listings_counter, "Bids": bids_counter}, 200
 
 
 
