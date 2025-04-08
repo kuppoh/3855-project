@@ -85,18 +85,16 @@ def consumer_polling():
 
 # Endpoint functions
 def get_listings(index):
-    logger.debug("Creating consumer for listings...")
-    consumer = create_consumer()
-    consumer.subscribe([topic_name])
+    # Ensure the consumer is subscribed to the topic before polling
+    consumer.subscribe([topic_name])  # This should ideally happen once when the consumer is initialized, not per request
 
     with counter_lock:  # Acquire lock to ensure no updates to the counter while checking
         if index >= listings_counter:
             logger.debug("Index out of range for listings.")
-            consumer.close()  # Close the consumer to avoid it hanging
-            logger.debug("Consumer closed for get-listings successfully!")
             return {"message": f"No message at index {index}!"}, 404
 
-    counter = 0
+    counter = 0  # Initialize the counter for polling
+
     while True:
         msg = consumer.poll(timeout=1.0)
 
@@ -114,13 +112,11 @@ def get_listings(index):
         if data["type"] == "listings":
             if counter == index:
                 logger.info(f"Found message: listings at index {index}")
-                consumer.close()  # Close the consumer after use
                 return jsonify([data["payload"]]), 200
 
             counter += 1
 
-    consumer.close()  # Ensure consumer is closed at the end
-    logger.debug("Consumer closed for get-listings successfully!")
+    logger.debug("No message found at the requested index.")
     return {"message": f"No message at index {index}!"}, 404
 
 
