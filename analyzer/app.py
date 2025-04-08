@@ -1,4 +1,4 @@
-import connexion, json, datetime, logging.config, yaml, os
+import connexion, json, datetime, logging.config, yaml, os, time
 from flask import jsonify
 from datetime import datetime
 from connexion import NoContent, FlaskApp
@@ -139,6 +139,7 @@ def consumer_polling():
     consumer.close()  # Ensures the consumer is closed when the polling stops
     logger.debug("Consumer closed after polling.")
 
+
 def get_stats():
     logger.debug("Creating consumer for stats...")
     consumer = create_consumer()
@@ -151,33 +152,48 @@ def get_stats():
     listings_counter = 0
     bids_counter = 0
 
-    while True:  # Continuously poll for messages
+    # Set a timeout duration (e.g., 10 seconds)
+    timeout_duration = 10  # Adjust based on your needs
+    start_time = time.time()
+
+    while True:
+        # Check if the timeout has been exceeded
+        if time.time() - start_time > timeout_duration:
+            logger.debug("Timeout reached, exiting polling loop.")
+            break
+
         msg = consumer.poll(timeout=1.0)
-        logger.debug(f"assigned partition: {consumer.assignment()}")
+        logger.debug(f"Assigned partition: {consumer.assignment()}")
 
         if msg is None:
-            logger.debug("No more messages available.")
-            break  # Exit the loop when no more messages are fetched
+            logger.debug("No messages fetched in this poll cycle.")
+            continue  # Continue polling until timeout
 
         if msg.error():
             logger.error(f"Consumer error: {msg.error()}")
-            continue  # Skip errors and move on to the next poll
+            continue  # Skip errors and continue polling
 
-        # Parse the message
-        data = json.loads(msg.value().decode("utf-8"))
-        logger.debug(f"Processing message: {data}")
+        # Parse and process the message
+        try:
+            data = json.loads(msg.value().decode("utf-8"))
+            logger.debug(f"Processing message: {data}")
 
-        # Update counters based on message type
-        if data["type"] == "listings":
-            listings_counter += 1
-            logger.debug(f"Incremented listings_counter: {listings_counter}")
-        elif data["type"] == "bids":
-            bids_counter += 1
-            logger.debug(f"Incremented bids_counter: {bids_counter}")
+            # Update counters based on message type
+            if data["type"] == "listings":
+                listings_counter += 1
+                logger.debug(f"Incremented listings_counter: {listings_counter}")
+            elif data["type"] == "bids":
+                bids_counter += 1
+                logger.debug(f"Incremented bids_counter: {bids_counter}")
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to decode message: {msg.value()} - {e}")
+            continue  # Skip invalid messages
 
     consumer.close()
     logger.debug("Consumer closed for get-stats successfully!")
     return {"Listings": listings_counter, "Bids": bids_counter}, 200
+
+
 
 app = connexion.FlaskApp(__name__, specification_dir='')
 
