@@ -85,13 +85,12 @@ def consumer_polling():
 
 # Endpoint functions
 def get_listings(index):
-    with counter_lock:  # Acquire lock to ensure no updates to the counter while checking
+    with counter_lock:
         if index >= listings_counter:
             logger.debug("Index out of range for listings.")
             return {"message": f"No message at index {index}!"}, 404
 
-    counter = 0  # Initialize the counter for polling
-
+    counter = 0
     while True:
         msg = consumer.poll(timeout=1.0)
 
@@ -115,6 +114,7 @@ def get_listings(index):
 
     logger.debug("No message found at the requested index.")
     return {"message": f"No message at index {index}!"}, 404
+
 
 
 
