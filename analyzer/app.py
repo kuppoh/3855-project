@@ -157,7 +157,7 @@ def get_stats():
 
         if msg is None:
             logger.debug("No more messages available.")
-            continue  # Exit the loop when no more messages are fetched
+            break  # Exit the loop when no more messages are fetched
 
         if msg.error():
             logger.error(f"Consumer error: {msg.error()}")
