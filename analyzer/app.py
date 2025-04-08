@@ -109,9 +109,11 @@ def get_bids(index):
     logger.debug("Consumer closed for get-bids successfully!")
     return {"message": f"No message at index {index}!"}, 404
 
-
+listings_counter = 0
+bids_counter = 0
 
 def consumer_polling():
+    global listings_counter, bids_counter
     logger.debug("Starting persistent consumer...")
     consumer = create_consumer()
 
@@ -131,54 +133,11 @@ def consumer_polling():
             logger.error(f"Consumer error: {msg.error()}")
             continue
 
-        data = json.loads(msg.value().decode("utf-8"))
-        logger.debug(f"Processing message: {data}")
-
-        # Add logic to process the message (e.g., save it to a database or update counters)
-
-    consumer.close()  # Ensures the consumer is closed when the polling stops
-    logger.debug("Consumer closed after polling.")
-
-
-def get_stats():
-    logger.debug("Creating consumer for stats...")
-    consumer = create_consumer()
-    consumer.subscribe(
-        [topic_name],
-        on_assign=lambda c, partitions: logger.debug(f"Assigned partitions: {partitions}"),
-        on_revoke=lambda c, partitions: logger.debug(f"Revoked partitions: {partitions}")
-    )
-
-    listings_counter = 0
-    bids_counter = 0
-
-    # Set a timeout duration (e.g., 10 seconds)
-    timeout_duration = 10  # Adjust based on your needs
-    start_time = time.time()
-
-    while True:
-        # Check if the timeout has been exceeded
-        if time.time() - start_time > timeout_duration:
-            logger.debug("Timeout reached, exiting polling loop.")
-            break
-
-        msg = consumer.poll(timeout=1.0)
-        logger.debug(f"Assigned partition: {consumer.assignment()}")
-
-        if msg is None:
-            logger.debug("No messages fetched in this poll cycle.")
-            continue  # Continue polling until timeout
-
-        if msg.error():
-            logger.error(f"Consumer error: {msg.error()}")
-            continue  # Skip errors and continue polling
-
-        # Parse and process the message
+        # Process the message and update global counters
         try:
             data = json.loads(msg.value().decode("utf-8"))
             logger.debug(f"Processing message: {data}")
 
-            # Update counters based on message type
             if data["type"] == "listings":
                 listings_counter += 1
                 logger.debug(f"Incremented listings_counter: {listings_counter}")
@@ -187,10 +146,13 @@ def get_stats():
                 logger.debug(f"Incremented bids_counter: {bids_counter}")
         except json.JSONDecodeError as e:
             logger.error(f"Failed to decode message: {msg.value()} - {e}")
-            continue  # Skip invalid messages
+            continue
 
-    consumer.close()
-    logger.debug("Consumer closed for get-stats successfully!")
+
+
+def get_stats():
+    global listings_counter, bids_counter
+    logger.debug("Fetching stats...")
     return {"Listings": listings_counter, "Bids": bids_counter}, 200
 
 
@@ -210,7 +172,7 @@ if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes":
 app.add_api("openapi.yaml", base_path="/analyzer", strict_validation=True, validate_responses=True)
 
 if __name__ == "__main__":
-    consumer_thread = Thread(target=get_stats, daemon=True)
+    consumer_thread = Thread(target=consumer_polling, daemon=True)
     consumer_thread.start()
 
     app.run(port=8200, host="0.0.0.0")
