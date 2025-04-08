@@ -119,14 +119,9 @@ def get_listings(index):
 
 
 def get_bids(index):
-    logger.debug("Creating consumer for bids...")
-    consumer = create_consumer()
-    consumer.subscribe([topic_name])
-
     with counter_lock:  # Ensure no other thread modifies the bids_counter while reading
         if index >= bids_counter:
             logger.debug("Index out of range for bids.")
-            consumer.close()  # Close the consumer to avoid it hanging
             logger.debug("Consumer closed for get-bids successfully!")
             return {"message": f"No message at index {index}!"}, 404
 
@@ -148,12 +143,10 @@ def get_bids(index):
         if data["type"] == "bids":
             if counter == index:
                 logger.info(f"Found message: bids at index {index}")
-                consumer.close()  # Close the consumer after use
                 return jsonify([data["payload"]]), 200
 
             counter += 1
 
-    consumer.close()  # Ensure consumer is closed at the end
     logger.debug("Consumer closed for get-bids successfully!")
     return {"message": f"No message at index {index}!"}, 404
 
