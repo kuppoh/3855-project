@@ -181,5 +181,4 @@ consumer_thread.start()
 
 
 if __name__ == "__main__":
-
     app.run(port=8200, host="0.0.0.0")
