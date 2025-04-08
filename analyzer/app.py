@@ -58,7 +58,7 @@ def get_listings(index):
     message = msg.value().decode('utf-8')
     data = json.loads(message)
 
-    if data["type"] == "listings" and index == 0:
+    if data["type"] == "listings":
         logger.info("Found message: listing")
         consumer.close()
         logger.debug("Consumer closed for get-listings successfully!")
@@ -92,7 +92,7 @@ def get_bids(index):
     message = msg.value().decode('utf-8')
     data = json.loads(message)
 
-    if data["type"] == "bids" and index == 0:
+    if data["type"] == "bids":
         logger.info("Found message: bids")
         consumer.close()
         logger.debug("Consumer closed for get-bids successfully!")
@@ -110,27 +110,31 @@ def get_stats():
     consumer.subscribe([topic_name])
     logger.debug(f"Consumer: {consumer}")
 
-    msg = consumer.poll(timeout=1.0)  # Poll once
-    if msg is None:
-        logger.debug("No message received.")
-        consumer.close()
-        logger.debug("Consumer closed for get-stats successfully!")
-        return {"Listings": 0, "Bids": 0}, 200
-
-    if msg.error():
-        logger.error(f"Consumer error: {msg.error()}")
-        consumer.close()
-        logger.debug("Consumer closed for get-stats successfully!")
-        return {"message": "Error consuming message!"}, 500
-
-    data = json.loads(msg.value().decode('utf-8'))
-
     listings_counter = 0
     bids_counter = 0
-    if data["type"] == "listings":
-        listings_counter += 1
-    elif data["type"] == "bids":
-        bids_counter += 1
+
+    while True:  # Continuously poll for messages
+        msg = consumer.poll(timeout=1.0)
+
+        if msg is None:
+            logger.debug("No more messages available.")
+            break  # Exit the loop when no more messages are fetched
+
+        if msg.error():
+            logger.error(f"Consumer error: {msg.error()}")
+            continue  # Skip errors and move on to the next poll
+
+        # Parse the message
+        data = json.loads(msg.value().decode("utf-8"))
+        logger.debug(f"Processing message: {data}")
+
+        # Update counters based on message type
+        if data["type"] == "listings":
+            listings_counter += 1
+            logger.debug(f"Incremented listings_counter: {listings_counter}")
+        elif data["type"] == "bids":
+            bids_counter += 1
+            logger.debug(f"Incremented bids_counter: {bids_counter}")
 
     consumer.close()
     logger.debug("Consumer closed for get-stats successfully!")
