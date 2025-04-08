@@ -18,7 +18,7 @@ with open("./config/log_conf.yaml", "r") as f:
     logging.config.dictConfig(LOG_CONFIG)
 
 logger = logging.getLogger('analyzerLogger')
-logger.debug("Logging is set up...")
+logger.debug("Logging is set up...") 
 
 # Kafka setup
 hostname = app_config['events']['hostname']
@@ -40,6 +40,7 @@ def get_listings(index):
     logger.debug("Creating consumer for listings...")
     consumer = create_consumer()
     consumer.subscribe([topic_name])
+    logger.debug(f"Consumer: {consumer}")
     
     counter = 0
     while True:
@@ -69,6 +70,7 @@ def get_bids(index):
     logger.debug("Creating consumer for bids...")
     consumer = create_consumer()
     consumer.subscribe([topic_name])
+    logger.debug(f"Consumer: {consumer}")
     
     counter = 0
     while True:
@@ -98,6 +100,7 @@ def get_stats():
     logger.debug("Creating consumer for stats...")
     consumer = create_consumer()
     consumer.subscribe([topic_name])
+    logger.debug(f"Consumer: {consumer}")
     
     listings_counter = 0
     bids_counter = 0

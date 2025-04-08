@@ -2,7 +2,7 @@ version: 1
 server:
   port: 8080
 events:
-  hostname: project-kafka-1
+  hostname: kafka
   port: 9092
   topic: events
 

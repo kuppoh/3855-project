@@ -6,6 +6,6 @@ datastore:
   port: 3306
   db: real_estate
 events:
-  hostname: "project-kafka-1"
+  hostname: "kafka"
   port: 9092
   topic: "events"
