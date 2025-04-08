@@ -138,16 +138,17 @@ def consumer_polling():
         try:
             data = json.loads(msg.value().decode("utf-8"))
             logger.debug(f"Processing message: {data}")
-
-            if data["type"] == "listings":
-                listings_counter += 1
-                logger.debug(f"Incremented listings_counter: {listings_counter}")
-            elif data["type"] == "bids":
-                bids_counter += 1
-                logger.debug(f"Incremented bids_counter: {bids_counter}")
+            with counter_lock:
+                if data["type"] == "listings":
+                    listings_counter += 1
+                    logger.debug(f"Incremented listings_counter: {listings_counter}")
+                elif data["type"] == "bids":
+                    bids_counter += 1
+                    logger.debug(f"Incremented bids_counter: {bids_counter}")
         except json.JSONDecodeError as e:
             logger.error(f"Failed to decode message: {msg.value()} - {e}")
             continue
+
 
 
 def get_stats():
