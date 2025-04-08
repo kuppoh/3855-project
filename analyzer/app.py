@@ -39,33 +39,7 @@ kafka_config = {
 def create_consumer():
     return Consumer(kafka_config)
 
-def consumer_polling():
-    logger.debug("Starting persistent consumer...")
-    consumer = create_consumer()
 
-    consumer.subscribe(
-        [topic_name],
-        on_assign=lambda c, partitions: logger.debug(f"Assigned partitions: {partitions}"),
-        on_revoke=lambda c, partitions: logger.debug(f"Revoked partitions: {partitions}")
-    )
-
-    while True:  # Continuously poll for messages
-        msg = consumer.poll(timeout=1.0)
-        if msg is None:
-            logger.debug("No messages fetched in this poll cycle.")
-            continue
-
-        if msg.error():
-            logger.error(f"Consumer error: {msg.error()}")
-            continue
-
-        data = json.loads(msg.value().decode("utf-8"))
-        logger.debug(f"Processing message: {data}")
-
-        # Add logic to process the message (e.g., save it to a database or update counters)
-
-    consumer.close()  # Ensures the consumer is closed when the polling stops
-    logger.debug("Consumer closed after polling.")
 
 # Endpoint functions
 def get_listings(index):
@@ -136,6 +110,35 @@ def get_bids(index):
     return {"message": f"No message at index {index}!"}, 404
 
 
+
+def consumer_polling():
+    logger.debug("Starting persistent consumer...")
+    consumer = create_consumer()
+
+    consumer.subscribe(
+        [topic_name],
+        on_assign=lambda c, partitions: logger.debug(f"Assigned partitions: {partitions}"),
+        on_revoke=lambda c, partitions: logger.debug(f"Revoked partitions: {partitions}")
+    )
+
+    while True:  # Continuously poll for messages
+        msg = consumer.poll(timeout=1.0)
+        if msg is None:
+            logger.debug("No messages fetched in this poll cycle.")
+            continue
+
+        if msg.error():
+            logger.error(f"Consumer error: {msg.error()}")
+            continue
+
+        data = json.loads(msg.value().decode("utf-8"))
+        logger.debug(f"Processing message: {data}")
+
+        # Add logic to process the message (e.g., save it to a database or update counters)
+
+    consumer.close()  # Ensures the consumer is closed when the polling stops
+    logger.debug("Consumer closed after polling.")
+
 def get_stats():
     logger.debug("Creating consumer for stats...")
     consumer = create_consumer()
@@ -191,7 +194,7 @@ if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes":
 app.add_api("openapi.yaml", base_path="/analyzer", strict_validation=True, validate_responses=True)
 
 if __name__ == "__main__":
-    consumer_thread = Thread(target=consumer_polling, daemon=True)
+    consumer_thread = Thread(target=get_stats, daemon=True)
     consumer_thread.start()
 
     app.run(port=8200, host="0.0.0.0")
