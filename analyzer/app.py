@@ -26,11 +26,12 @@ port = app_config['events']['port']
 topic_name = app_config["events"]["topic"]
 
 kafka_config = {
-    'bootstrap.servers': f"{hostname}:{port}",
-    'group.id': 'event_group', # needed...
-    'enable.auto.commit': True,
-    'auto.offset.reset': 'earliest'
+    'bootstrap.servers': f'{hostname}:{port}',
+    'group.id': 'event_group',
+    'auto.offset.reset': 'earliest',  # Start consuming from the beginning
+    'enable.auto.commit': True
 }
+
 
 # Create a global Kafka consumer
 def create_consumer():
