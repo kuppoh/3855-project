@@ -1,4 +1,4 @@
-import connexion, json, datetime, logging.config, yaml, sys
+import connexion, json, datetime, logging.config, yaml, sys, os
 from datetime import datetime
 from connexion import NoContent
 from database import make_session
