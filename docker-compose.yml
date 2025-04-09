@@ -81,6 +81,8 @@ services:
       - my_network
 
   receiver:
+    deploy:
+      replicas: 3
     build:
       context: receiver
       dockerfile: Dockerfile
