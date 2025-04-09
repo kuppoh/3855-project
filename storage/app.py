@@ -4,7 +4,8 @@ from connexion import NoContent
 from database import make_session
 from sqlalchemy import select
 from models import listings, bids, Base
-from confluent_kafka import Consumer, KafkaError  # Updated to use Confluent Kafka
+from pykafka import KafkaClient
+from pykafka.common import OffsetType
 from threading import Thread
 from commands import create_tables, drop_tables
 from database import engine
@@ -20,42 +21,42 @@ logger = logging.getLogger('storageLogger')
 
 
 def process_messages():
-    kafka_config = {
-        'bootstrap.servers': f"{app_config['events']['hostname']}:{app_config['events']['port']}",
-        'group.id': 'event_group',
-        'auto.offset.reset': 'latest'
-    }
-
-    logger.info(f"Connecting to Kafka: {kafka_config['bootstrap.servers']}.")
-    consumer = Consumer(kafka_config)
-    consumer.subscribe([app_config['events']['topic']])
-
+    """Process messages from Kafka"""
+    # Connect to Kafka
+    logger.info(f"Connecting to Kafka: {app_config['events']['hostname']}:{app_config['events']['port']}")
+    client = KafkaClient(hosts=f"{app_config['events']['hostname']}:{app_config['events']['port']}")
+    topic = client.topics[app_config['events']['topic'].encode()]
+    
+    # Create a consumer that starts from the earliest offset and doesn't commit offsets
+    consumer = topic.get_simple_consumer(
+        consumer_group=b'event_group',
+        reset_offset_on_start=False,
+        auto_offset_reset=OffsetType.LATEST
+    )
+    
     logger.info("Consumer created and subscribed. Waiting for messages...")
-
-    while True:
-        msg = consumer.poll(1.0)  # Timeout of 1 second
-        if msg is None:
-            continue
-        if msg.error():
-            if msg.error().code() == KafkaError._PARTITION_EOF:
-                logger.info(f"End of partition reached: {msg.topic()} {msg.partition()}")
-            elif msg.error():
-                logger.error(f"Error consuming message: {msg.error()}")
-            continue
-
-        msg_str = msg.value().decode('utf-8')
-        msg = json.loads(msg_str)
-        logger.info("Message: %s" % msg)
-        payload = msg["payload"]
-
-        if msg["type"] == "listings":
-            logger.info("Processing listings event: %s", payload)
-            post_listing(payload)
-        elif msg["type"] == "bids":
-            logger.info("Processing bids event: %s", payload)
-            post_bid(payload)
-
-    consumer.close()
+    
+    # Process messages
+    for msg in consumer:
+        if msg is not None:
+            try:
+                msg_str = msg.value.decode('utf-8')
+                msg = json.loads(msg_str)
+                logger.info("Message: %s" % msg)
+                payload = msg["payload"]
+                
+                if msg["type"] == "listings":
+                    logger.info("Processing listings event: %s", payload)
+                    post_listing(payload)
+                elif msg["type"] == "bids":
+                    logger.info("Processing bids event: %s", payload)
+                    post_bid(payload)
+                    
+                # Commit the offset after processing
+                consumer.commit_offsets()
+                
+            except Exception as e:
+                logger.error(f"Error processing message: {e}")
 
 
 def post_listing(body):
@@ -155,14 +156,30 @@ def get_bids(start_timestamp, end_timestamp):
 
 
 def setup_kafka_thread():
+    """Set up a background thread to consume messages from Kafka"""
     logger.info("Setting up Kafka consumer thread")
     t1 = Thread(target=process_messages)
-    t1.setDaemon(True)
+    t1.daemon = True
     t1.start()
     logger.info("Consumer setup done.")
 
 
 app = connexion.FlaskApp(__name__, specification_dir='')
+
+# Add CORS middleware if enabled via environment variable
+if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes":
+    from starlette.middleware.cors import CORSMiddleware
+    from connexion.middleware import MiddlewarePosition
+    
+    app.add_middleware(
+        CORSMiddleware,
+        position=MiddlewarePosition.BEFORE_EXCEPTION,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
 app.add_api("openapi.yaml",
             base_path="/storage",
             strict_validation=True,

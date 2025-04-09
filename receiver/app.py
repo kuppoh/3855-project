@@ -1,6 +1,6 @@
 import connexion, json, datetime, httpx, time, yaml, logging.config, os
 from connexion import NoContent
-from confluent_kafka import Producer
+from pykafka import KafkaClient
 
 # Load configurations
 with open('./config/receiver/app_conf.yaml', 'r') as f:
@@ -12,12 +12,11 @@ with open("./config/log_conf.yaml", "r") as f:
 
 logger = logging.getLogger('receiverLogger')
 
-
-kafka_config = {
-    'bootstrap.servers': f"{app_config['events']['hostname']}:{app_config['events']['port']}"
-}
-
-producer = Producer(kafka_config)
+# Set up Kafka producer
+kafka_host = f"{app_config['events']['hostname']}:{app_config['events']['port']}"
+client = KafkaClient(hosts=kafka_host)
+topic = client.topics[app_config['events']['topic'].encode()]
+producer = topic.get_sync_producer()
 
 # Endpoint functions
 def post_listing(body):  # post listings
@@ -35,8 +34,7 @@ def post_listing(body):  # post listings
     msg_str = json.dumps(msg)
 
     try:
-        producer.produce(app_config['events']['topic'], value=msg_str.encode('utf-8'))
-        producer.flush()  # Ensure message is sent before proceeding
+        producer.produce(msg_str.encode('utf-8'))
         logger.info(f"Response for event: listing-post-event (trace_id: {trace_id})")
         return NoContent, 200
     except Exception as e:
@@ -58,8 +56,7 @@ def post_bid(body):  # post bids/offers
     msg_str = json.dumps(msg)
 
     try:
-        producer.produce(app_config['events']['topic'], value=msg_str.encode('utf-8'))
-        producer.flush()
+        producer.produce(msg_str.encode('utf-8'))
         logger.info(f"Response for event: bids-post-event (trace_id: {trace_id})")
         return NoContent, 200
     except Exception as e:
@@ -68,10 +65,25 @@ def post_bid(body):  # post bids/offers
 
 
 app = connexion.FlaskApp(__name__, specification_dir='')  # look at the current directory for OpenAPI Specifications.
-app.add_api("openapi.yaml",  # OpenAPI file to use
+
+# Add CORS middleware if enabled via environment variable
+if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes":
+    from starlette.middleware.cors import CORSMiddleware
+    from connexion.middleware import MiddlewarePosition
+    
+    app.add_middleware(
+        CORSMiddleware,
+        position=MiddlewarePosition.BEFORE_EXCEPTION,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+app.add_api("openapi.yaml", 
             base_path="/receiver",
-            strict_validation=True,  # validate reqs + msgs + params for endpoints against API file
-            validate_responses=True)  # validate res msgs from endpoints against API file
+            strict_validation=True,
+            validate_responses=True)
 
 if __name__ == "__main__":
     app.run(port=8080, host="0.0.0.0")
