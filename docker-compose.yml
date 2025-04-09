@@ -86,7 +86,7 @@ services:
     build:
       context: receiver
       dockerfile: Dockerfile
-    container_name: receiver
+    # container_name: receiver
     depends_on:
       kafka:
         condition: service_healthy
