@@ -64,17 +64,12 @@ def update_checks():
   
   # Get storage counts
   try:
-      listings_count_response = httpx.get(f"{app_config['services']['storage']['url']}/site/listings/count")
-      if listings_count_response.status_code == 200:
-          result["counts"]["db"]["listings"] = listings_count_response.json().get("count_listings", 0)
+      events_count_response = httpx.get(f"{app_config['services']['storage']['url']}/site/events/count")
+      if events_count_response.status_code == 200:
+          result["counts"]["db"]["listings"] = events_count_response.json().get("listings", 0)
+          result["counts"]["db"]["bids"] = events_count_response.json().get("bids", 0)
       else:
-          logger.error(f"Failed to get listings count from storage: {listings_count_response.status_code}")
-          
-      bids_count_response = httpx.get(f"{app_config['services']['storage']['url']}/site/bids/count")
-      if bids_count_response.status_code == 200:
-          result["counts"]["db"]["bids"] = bids_count_response.json().get("count_bids", 0)
-      else:
-          logger.error(f"Failed to get bids count from storage: {bids_count_response.status_code}")
+          logger.error(f"Failed to get events count from storage: {events_count_response.status_code}")
   except Exception as e:
       logger.error(f"Exception when calling storage service for counts: {str(e)}")
   
