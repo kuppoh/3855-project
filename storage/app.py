@@ -155,35 +155,22 @@ def get_bids(start_timestamp, end_timestamp):
     return result
 
 #########################################################################################
+def get_all_events_count():
 
-def get_listings_count():
     session = make_session()
     
-    # Count all listings
+    # Count all listings and bids
     listing_count = session.query(listings).count()
-    
-    result = {
-        "count_listings": listing_count
-    }
-    
-    session.close()
-    
-    logger.info(f"Returning count of listings: {listing_count}")
-    return result, 200
-
-def get_bids_count():
-    session = make_session()
-    
-    # Count all bids
     bid_count = session.query(bids).count()
     
     result = {
-        "count_bids": bid_count
+        "listings": listing_count,
+        "bids": bid_count
     }
     
     session.close()
     
-    logger.info(f"Returning count of bids: {bid_count}")
+    logger.info(f"Returning counts - listings: {listing_count}, bids: {bid_count}")
     return result, 200
 
 def get_listings_ids():
