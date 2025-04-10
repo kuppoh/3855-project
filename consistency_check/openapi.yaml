@@ -10,7 +10,7 @@ paths:
   /update:
     post:
       summary: Endpoint to run the checks
-      operationId: app.run_consistency_checks
+      operationId: app.update_checks
       description: Runs the consistency checks and updates the JSON datastore
       responses:
         '200':
@@ -48,8 +48,8 @@ components:
     Checks:
       required:
       - counts
-      - not_in_db
-      - not_in_queue
+      - missing_in_db
+      - missing_in_queue
       - last_updated
       type: object
       properties:
@@ -62,25 +62,25 @@ components:
             db:
               type: object
               properties:
-                event1:
+                listings:
                   type: integer
-                event2:
+                bids:
                   type: integer
             queue:
               type: object
               properties:
-                event1:
+                listings:
                   type: integer
-                event2:
+                bids:
                   type: integer
             processing:
               type: object
               properties:
-                event1:
+                listings:
                   type: integer
-                event2:
+                bids:
                   type: integer
-        not_in_db:
+        missing_in_db:
           type: array
           items:
             type: object
@@ -88,8 +88,10 @@ components:
               event_id:
                 type: integer
               trace_id:
-                type: integer
-        not_in_queue:
+                type: string
+              type:
+                type: string
+        missing_in_queue:
           type: array
           items:
             type: object
@@ -97,4 +99,6 @@ components:
               event_id:
                 type: integer
               trace_id:
-                type: integer
+                type: string
+              type:
+                type: string
