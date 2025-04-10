@@ -32,6 +32,12 @@ handlers:
     formatter: simple
     filename: /app/logs/storage.log
     mode: a
+  consistency_file:
+    class: logging.FileHandler
+    level: DEBUG
+    formatter: simple
+    filename: /app/logs/consistency.log
+    mode: a
 
 loggers:
   processingLogger:
@@ -49,6 +55,10 @@ loggers:
   storageLogger:
     level: DEBUG
     handlers: [console, storage_file]
+    propagate: no
+  consistencyLogger:
+    level: DEBUG
+    handlers: [console, consistency_file]
     propagate: no
 
 root:

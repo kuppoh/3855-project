@@ -154,6 +154,74 @@ def get_bids(start_timestamp, end_timestamp):
     logger.info("Found %d bids (start: %s | end: %s)", len(result), start, end)
     return result
 
+#########################################################################################
+
+def get_listings_count():
+    session = make_session()
+    
+    # Count all listings
+    listing_count = session.query(listings).count()
+    
+    result = {
+        "count_listings": listing_count
+    }
+    
+    session.close()
+    
+    logger.info(f"Returning count of listings: {listing_count}")
+    return result, 200
+
+def get_bids_count():
+    session = make_session()
+    
+    # Count all bids
+    bid_count = session.query(bids).count()
+    
+    result = {
+        "count_bids": bid_count
+    }
+    
+    session.close()
+    
+    logger.info(f"Returning count of bids: {bid_count}")
+    return result, 200
+
+def get_listings_ids():
+    session = make_session()
+    
+    # Get all listings IDs and trace IDs
+    result = [
+        {
+            "event_id": row.listing_id,
+            "trace_id": row.trace_id
+        }
+        for row in session.query(listings).all()
+    ]
+    
+    session.close()
+    
+    logger.info(f"Returning {len(result)} listing IDs")
+    return result, 200
+
+def get_bids_ids():
+    session = make_session()
+    
+    # Get all bid IDs and trace IDs
+    result = [
+        {
+            "event_id": row.bidding_id,
+            "trace_id": row.trace_id
+        }
+        for row in session.query(bids).all()
+    ]
+    
+    session.close()
+    
+    logger.info(f"Returning {len(result)} bid IDs")
+    return result, 200
+
+#########################################################################################
+
 
 def setup_kafka_thread():
     """Set up a background thread to consume messages from Kafka"""

@@ -91,6 +91,88 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/bidding_schema' # current existing bids schema
+  /site/listings/count:
+    get:
+      summary: Get count of listings
+      description: Returns the number of listings in the database
+      operationId: app.get_listings_count
+      responses:
+        '200':
+          description: Successfully returned count of listings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count_listings:
+                    type: integer
+                    description: Number of listings in the database
+                    example: 120
+  /site/bids/count:
+    get:
+      summary: Get count of bids
+      description: Returns the number of bids in the database
+      operationId: app.get_bids_count
+      responses:
+        '200':
+          description: Successfully returned count of bids
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count_bids:
+                    type: integer
+                    description: Number of bids in the database
+                    example: 85
+  /site/listings/ids:
+    get:
+      summary: Get all listing IDs and trace IDs
+      description: Returns a list of all listing IDs and their trace IDs
+      operationId: app.get_listings_ids
+      responses:
+        '200':
+          description: Successfully returned listing IDs and trace IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    event_id:
+                      type: integer
+                      description: Listing ID
+                      example: 12345
+                    trace_id:
+                      type: integer
+                      format: int64
+                      description: Trace ID
+                      example: 1675234890123456789
+  /site/bids/ids:
+    get:
+      summary: Get all bid IDs and trace IDs
+      description: Returns a list of all bid IDs and their trace IDs
+      operationId: app.get_bids_ids
+      responses:
+        '200':
+          description: Successfully returned bid IDs and trace IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    event_id:
+                      type: integer
+                      description: Bid ID
+                      example: 54321
+                    trace_id:
+                      type: integer
+                      format: int64
+                      description: Trace ID
+                      example: 1675234890123456789
 components:
   schemas:
     listing_schema:

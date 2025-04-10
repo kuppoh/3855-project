@@ -98,6 +98,59 @@ def get_stats():
     return {"Listings": listings_counter, "Bids": bids_counter}, 200
 
 
+######################################################################################
+def get_listings_ids():
+    consumer = topic.get_simple_consumer(
+        reset_offset_on_start=True, 
+        consumer_timeout_ms=5000
+    )
+    
+    result = []
+    
+    for msg in consumer:
+        message = msg.value.decode("utf-8")
+        data = json.loads(message)
+        
+        if data["type"] == "listings":
+            payload = data["payload"]
+            result.append({
+                "event_id": payload["listing_id"],
+                "trace_id": payload["trace_id"]
+            })
+    
+    consumer.stop()
+    
+    logger.info(f"Returning {len(result)} listing IDs from Kafka")
+    return result, 200
+
+def get_bids_ids():
+    consumer = topic.get_simple_consumer(
+        reset_offset_on_start=True, 
+        consumer_timeout_ms=5000
+    )
+    
+    result = []
+    
+    for msg in consumer:
+        message = msg.value.decode("utf-8")
+        data = json.loads(message)
+        
+        if data["type"] == "bids":
+            payload = data["payload"]
+            result.append({
+                "event_id": payload["bidding_id"],
+                "trace_id": payload["trace_id"]
+            })
+    
+    consumer.stop()
+    
+    logger.info(f"Returning {len(result)} bid IDs from Kafka")
+    return result, 200
+
+
+######################################################################################
+
+
 # Setup Connexion app
 app = connexion.FlaskApp(__name__, specification_dir='')
 

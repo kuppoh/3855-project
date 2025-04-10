@@ -5,8 +5,6 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    # ports:
-    #   - "22181:2181"
     volumes:
       - zookeeper_data:/var/lib/zookeeper/data
     healthcheck:
@@ -24,8 +22,6 @@ services:
     depends_on:
       zookeeper:
         condition: service_healthy
-    # ports:
-    #   - "29092:29092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -54,8 +50,6 @@ services:
       MYSQL_USER: 'keziah'
       MYSQL_PASSWORD: 'password123'
       MYSQL_DATABASE: 'real_estate'
-    # ports:
-    #   - "3306:3306"
     volumes:
       - ./data/database:/var/lib/mysql
     healthcheck:
@@ -76,7 +70,8 @@ services:
       - "80:80"
     depends_on: 
       - processing
-      - analyzer 
+      - analyzer
+      - consistency_check
     networks:
       - my_network
 
@@ -86,14 +81,11 @@ services:
     build:
       context: receiver
       dockerfile: Dockerfile
-    # container_name: receiver
     depends_on:
       kafka:
         condition: service_healthy
       storage:
         condition: service_healthy
-    # ports:
-    #   - "8080:8080"
     volumes:
       - ./config/receiver/app_conf.yaml:/app/config/receiver/app_conf.yaml
       - ./config/log_conf.yaml:/app/config/log_conf.yaml
@@ -134,8 +126,6 @@ services:
     depends_on:
       storage:
         condition: service_healthy
-    # ports:
-    #   - "8100:8100"
     volumes:
       - ./config/processing/app_conf.yaml:/app/config/processing/app_conf.yaml
       - ./config/log_conf.yaml:/app/config/log_conf.yaml
@@ -155,8 +145,6 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-    # ports:
-    #   - "8200:8200"
     volumes:
       - ./config/analyzer/app_conf.yaml:/app/config/analyzer/app_conf.yaml
       - ./config/log_conf.yaml:/app/config/log_conf.yaml
@@ -167,10 +155,29 @@ services:
     networks:
       - my_network
 
+  consistency_check:
+    build:
+      context: consistency_check
+      dockerfile: Dockerfile
+    container_name: consistency_check
+    depends_on:
+      - processing
+      - analyzer
+      - storage
+    volumes:
+      - ./config/consistency_check/app_conf.yaml:/app/config/consistency_check/app_conf.yaml
+      - ./config/log_conf.yaml:/app/config/log_conf.yaml
+      - ./logs/:/app/logs/
+      - ./data/consistency_check:/app/data/consistency_check/
+    user: nobody
+    environment:
+      CORS_ALLOW_ALL: yes
+    networks:
+      - my_network
+
 networks:
   my_network:
     driver: bridge
-
 
 volumes:
   zookeeper_data:

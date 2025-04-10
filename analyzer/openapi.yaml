@@ -105,6 +105,54 @@ paths:
                 properties:
                   message:
                     type: string
+  /site/listings/ids:
+    get:
+      summary: Get all listing IDs and trace IDs from Kafka
+      description: Returns a list of all listing IDs and their trace IDs from the Kafka queue
+      operationId: app.get_listings_ids
+      responses:
+        '200':
+          description: Successfully returned listing IDs and trace IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    event_id:
+                      type: integer
+                      description: Listing ID
+                      example: 12345
+                    trace_id:
+                      type: integer
+                      format: int64
+                      description: Trace ID
+                      example: 1675234890123456789
+  /site/bids/ids:
+    get:
+      summary: Get all bid IDs and trace IDs from Kafka
+      description: Returns a list of all bid IDs and their trace IDs from the Kafka queue
+      operationId: app.get_bids_ids
+      responses:
+        '200':
+          description: Successfully returned bid IDs and trace IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    event_id:
+                      type: integer
+                      description: Bid ID
+                      example: 54321
+                    trace_id:
+                      type: integer
+                      format: int64
+                      description: Trace ID
+                      example: 1675234890123456789
 components:
   schemas:
     listing_schema:

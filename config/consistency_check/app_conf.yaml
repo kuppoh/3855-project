@@ -1,0 +1,16 @@
+version: 1
+server:
+  port: 8300
+datastore:
+  filename: /app/data/consistency_check/data.json
+services:
+  processing:
+    url: http://processing:8100/processing
+  analyzer:
+    url: http://analyzer:8200/analyzer
+  storage:
+    url: http://storage:8090/storage
+events:
+  hostname: kafka
+  port: 9092
+  topic: events
