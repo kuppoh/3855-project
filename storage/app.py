@@ -156,7 +156,6 @@ def get_bids(start_timestamp, end_timestamp):
 
 #########################################################################################
 def get_all_events_count():
-
     session = make_session()
     
     # Count all listings and bids
