@@ -1,16 +1,8 @@
-import connexion
-import json
-import logging.config
-import yaml
-import os
-import time
-import datetime
-import httpx
+import connexion, json, logging.config, yaml, os, time, datetime, httpx
 from connexion import NoContent
 from connexion.middleware import MiddlewarePosition
 from starlette.middleware.cors import CORSMiddleware
 
-# Load configurations
 with open('./config/consistency_check/app_conf.yaml', 'r') as f:
     app_config = yaml.safe_load(f.read())
 
@@ -20,16 +12,13 @@ with open('./config/log_conf.yaml', 'r') as f:
 
 logger = logging.getLogger('consistencyLogger')
 
-# Define the datastore file path
 DATASTORE_FILE = app_config['datastore']['filename']
 
 def update_checks():
-  """Update consistency checks by querying services and comparing data"""
   start_time = time.time()
   
   logger.info("Starting consistency checks update process")
   
-  # Initialize result structure
   result = {
       "last_updated": datetime.datetime.now().isoformat(),
       "counts": {
@@ -49,85 +38,78 @@ def update_checks():
       "missing_in_db": [],
       "missing_in_queue": []
   }
+
+  # the processing counts
+  processing_response = httpx.get(f"{app_config['services']['processing']['url']}/stats")
+  if processing_response.status_code == 200:
+      processing_data = processing_response.json()
+      result["counts"]["processing"]["listings"] = processing_data.get("num_listings", 0)
+      result["counts"]["processing"]["bids"] = processing_data.get("num_bids", 0)
+  else:
+      logger.error(f"Failed to get processing stats: {processing_response.status_code}")
+
+  # the storage counts
+  events_count_response = httpx.get(f"{app_config['services']['storage']['url']}/site/events/count")
+  if events_count_response.status_code == 200:
+      result["counts"]["db"]["listings"] = events_count_response.json().get("listings", 0)
+      result["counts"]["db"]["bids"] = events_count_response.json().get("bids", 0)
+  else:
+      logger.error(f"Failed to get events count from storage: {events_count_response.status_code}")
+
   
-  # Get processing stats
-  try:
-      processing_response = httpx.get(f"{app_config['services']['processing']['url']}/stats")
-      if processing_response.status_code == 200:
-          processing_data = processing_response.json()
-          result["counts"]["processing"]["listings"] = processing_data.get("num_listings", 0)
-          result["counts"]["processing"]["bids"] = processing_data.get("num_bids", 0)
-      else:
-          logger.error(f"Failed to get processing stats: {processing_response.status_code}")
-  except Exception as e:
-      logger.error(f"Exception when calling processing service: {str(e)}")
+  # the analyzer counts
+  analyzer_stats_response = httpx.get(f"{app_config['services']['analyzer']['url']}/stats")
+  if analyzer_stats_response.status_code == 200:
+      analyzer_data = analyzer_stats_response.json()
+      result["counts"]["queue"]["listings"] = analyzer_data.get("Listings", 0)
+      result["counts"]["queue"]["bids"] = analyzer_data.get("Bids", 0)
+  else:
+      logger.error(f"Failed to get analyzer stats: {analyzer_stats_response.status_code}")
+
   
-  # Get storage counts
-  try:
-      events_count_response = httpx.get(f"{app_config['services']['storage']['url']}/site/events/count")
-      if events_count_response.status_code == 200:
-          result["counts"]["db"]["listings"] = events_count_response.json().get("listings", 0)
-          result["counts"]["db"]["bids"] = events_count_response.json().get("bids", 0)
-      else:
-          logger.error(f"Failed to get events count from storage: {events_count_response.status_code}")
-  except Exception as e:
-      logger.error(f"Exception when calling storage service for counts: {str(e)}")
-  
-  # Get analyzer counts
-  try:
-      analyzer_stats_response = httpx.get(f"{app_config['services']['analyzer']['url']}/stats")
-      if analyzer_stats_response.status_code == 200:
-          analyzer_data = analyzer_stats_response.json()
-          result["counts"]["queue"]["listings"] = analyzer_data.get("Listings", 0)
-          result["counts"]["queue"]["bids"] = analyzer_data.get("Bids", 0)
-      else:
-          logger.error(f"Failed to get analyzer stats: {analyzer_stats_response.status_code}")
-  except Exception as e:
-      logger.error(f"Exception when calling analyzer service for stats: {str(e)}")
-  
-  # Get storage IDs
+  # storage IDs
   db_listings_ids = {}
   db_bids_ids = {}
   
-  try:
-      listings_ids_response = httpx.get(f"{app_config['services']['storage']['url']}/site/listings/ids")
-      if listings_ids_response.status_code == 200:
-          for item in listings_ids_response.json():
-              db_listings_ids[str(item["trace_id"])] = item["event_id"]
-      else:
-          logger.error(f"Failed to get listings IDs from storage: {listings_ids_response.status_code}")
-          
-      bids_ids_response = httpx.get(f"{app_config['services']['storage']['url']}/site/bids/ids")
-      if bids_ids_response.status_code == 200:
-          for item in bids_ids_response.json():
-              db_bids_ids[str(item["trace_id"])] = item["event_id"]
-      else:
-          logger.error(f"Failed to get bids IDs from storage: {bids_ids_response.status_code}")
-  except Exception as e:
-      logger.error(f"Exception when calling storage service for IDs: {str(e)}")
+  ############# listings
+  listings_ids_response = httpx.get(f"{app_config['services']['storage']['url']}/site/listings/ids")
+  if listings_ids_response.status_code == 200:
+      for item in listings_ids_response.json():
+          db_listings_ids[str(item["trace_id"])] = item["event_id"]
+  else:
+      logger.error(f"Failed to get listings IDs from storage: {listings_ids_response.status_code}")
+      
+  ############# bids
+  bids_ids_response = httpx.get(f"{app_config['services']['storage']['url']}/site/bids/ids")
+  if bids_ids_response.status_code == 200:
+      for item in bids_ids_response.json():
+          db_bids_ids[str(item["trace_id"])] = item["event_id"]
+  else:
+      logger.error(f"Failed to get bids IDs from storage: {bids_ids_response.status_code}")
+
   
-  # Get analyzer IDs
+  # analyzer IDs
   queue_listings_ids = {}
   queue_bids_ids = {}
   
-  try:
-      queue_listings_ids_response = httpx.get(f"{app_config['services']['analyzer']['url']}/site/listings/ids")
-      if queue_listings_ids_response.status_code == 200:
-          for item in queue_listings_ids_response.json():
-              queue_listings_ids[str(item["trace_id"])] = item["event_id"]
-      else:
-          logger.error(f"Failed to get listings IDs from analyzer: {queue_listings_ids_response.status_code}")
-          
-      queue_bids_ids_response = httpx.get(f"{app_config['services']['analyzer']['url']}/site/bids/ids")
-      if queue_bids_ids_response.status_code == 200:
-          for item in queue_bids_ids_response.json():
-              queue_bids_ids[str(item["trace_id"])] = item["event_id"]
-      else:
-          logger.error(f"Failed to get bids IDs from analyzer: {queue_bids_ids_response.status_code}")
-  except Exception as e:
-      logger.error(f"Exception when calling analyzer service for IDs: {str(e)}")
+  ############ listings
+  queue_listings_ids_response = httpx.get(f"{app_config['services']['analyzer']['url']}/site/listings/ids")
+  if queue_listings_ids_response.status_code == 200:
+      for item in queue_listings_ids_response.json():
+          queue_listings_ids[str(item["trace_id"])] = item["event_id"]
+  else:
+      logger.error(f"Failed to get listings IDs from analyzer: {queue_listings_ids_response.status_code}")
+
+  ############ bids
+  queue_bids_ids_response = httpx.get(f"{app_config['services']['analyzer']['url']}/site/bids/ids")
+  if queue_bids_ids_response.status_code == 200:
+      for item in queue_bids_ids_response.json():
+          queue_bids_ids[str(item["trace_id"])] = item["event_id"]
+  else:
+      logger.error(f"Failed to get bids IDs from analyzer: {queue_bids_ids_response.status_code}")
+
   
-  # Compare listings IDs to find missing in DB
+  # look at listings IDs to find missing in db
   for trace_id, event_id in queue_listings_ids.items():
       if trace_id not in db_listings_ids:
           result["missing_in_db"].append({
@@ -136,7 +118,7 @@ def update_checks():
               "type": "listings"
           })
   
-  # Compare bids IDs to find missing in DB
+  # look at bids IDs to find missing in db
   for trace_id, event_id in queue_bids_ids.items():
       if trace_id not in db_bids_ids:
           result["missing_in_db"].append({
@@ -145,7 +127,7 @@ def update_checks():
               "type": "bids"
           })
   
-  # Compare listings IDs to find missing in queue
+  # listings IDs to find missing in queue
   for trace_id, event_id in db_listings_ids.items():
       if trace_id not in queue_listings_ids:
           result["missing_in_queue"].append({
@@ -154,7 +136,7 @@ def update_checks():
               "type": "listings"
           })
   
-  # Compare bids IDs to find missing in queue
+  # bids IDs to find missing in queue
   for trace_id, event_id in db_bids_ids.items():
       if trace_id not in queue_bids_ids:
           result["missing_in_queue"].append({
@@ -163,21 +145,19 @@ def update_checks():
               "type": "bids"
           })
   
-  # Calculate processing time
+  # processing time
   end_time = time.time()
   processing_time_ms = int((end_time - start_time) * 1000)
   
   # Save result to file
-  try:
-      # Ensure directory exists
-      os.makedirs(os.path.dirname(DATASTORE_FILE), exist_ok=True)
-      
-      with open(DATASTORE_FILE, 'w') as f:
-          json.dump(result, f, indent=2)
-  except Exception as e:
-      logger.error(f"Error saving consistency check results: {str(e)}")
+  # Ensure directory exists
+  os.makedirs(os.path.dirname(DATASTORE_FILE), exist_ok=True)
   
-  # Log completion
+  with open(DATASTORE_FILE, 'w') as f:
+      json.dump(result, f, indent=2)
+
+  
+  # log finish 
   missing_in_db_count = len(result["missing_in_db"])
   missing_in_queue_count = len(result["missing_in_queue"])
   
@@ -187,19 +167,16 @@ def update_checks():
 
 def get_checks():
   if not os.path.exists(DATASTORE_FILE):
-      return {"message": "No consistency checks have been run yet"}, 404
+    return {"message": "No consistency checks have been run yet"}, 404
   
-  try:
-      with open(DATASTORE_FILE, 'r') as f:
-        return json.load(f), 200
-  except Exception as e:
-      logger.error(f"Error reading consistency check results: {str(e)}")
-      return {"message": f"Error reading consistency check results: {str(e)}"}, 500
+  with open(DATASTORE_FILE, 'r') as f:
+    return json.load(f), 200
 
-# Create the Connexion app
+
+
 app = connexion.FlaskApp(__name__, specification_dir='')
 
-# Add CORS middleware if enabled via environment variable
+
 if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes":
   app.add_middleware(
       CORSMiddleware,
@@ -210,7 +187,7 @@ if "CORS_ALLOW_ALL" in os.environ and os.environ["CORS_ALLOW_ALL"] == "yes":
       allow_headers=["*"],
   )
 
-# Add API with base path for reverse proxy
+
 app.add_api("openapi.yaml", 
   base_path="/consistency_check", 
   strict_validation=True, 

@@ -1,9 +1,4 @@
-import connexion
-import json
-import logging.config
-import yaml
-import os
-import time
+import connexion, json, logging.config, yaml, os, time
 from flask import jsonify
 from threading import Thread, Lock
 from pykafka import KafkaClient
@@ -11,7 +6,7 @@ from pykafka.common import OffsetType
 from starlette.middleware.cors import CORSMiddleware
 from connexion.middleware import MiddlewarePosition
 
-# Load configurations
+
 with open('./config/analyzer/app_conf.yaml', 'r') as f:
     app_config = yaml.safe_load(f.read())
 
@@ -22,14 +17,14 @@ with open("./config/log_conf.yaml", "r") as f:
 logger = logging.getLogger('analyzerLogger')
 logger.debug("Logging is set up...")
 
-# Kafka setup (Global Client)
+
 hostname = app_config["events"]["hostname"]
 port = app_config["events"]["port"]
 client = KafkaClient(hosts=f"{hostname}:{port}")
 topic = client.topics[app_config["events"]["topic"].encode()]
 
 # Create a message store and counters
-messages_store = []  # Only needed if you want to store all messages
+messages_store = []
 counter_lock = Lock()
 listings_counter = 0
 bids_counter = 0
@@ -47,11 +42,11 @@ def get_listings(index):
         if data["type"] == "listings":
             if counter == index:
                 logger.info("Found message: listing")
-                consumer.stop()  # Make sure to clean up
+                consumer.stop() 
                 return jsonify([data["payload"]]), 200
             counter += 1
     
-    consumer.stop()  # Always clean up
+    consumer.stop() 
 
     return {"message": f"No message at index {index}!"}, 404
 
@@ -69,11 +64,11 @@ def get_bids(index):
         if data["type"] == "bids":
             if counter == index:
                 logger.info("Found message: bids")
-                consumer.stop()  # Make sure to clean up
+                consumer.stop()
                 return jsonify([data["payload"]]), 200  
             counter += 1
             
-    consumer.stop()  # Always clean up
+    consumer.stop()
 
     return {"message": f"No message at index {index}!"}, 404
 
@@ -93,11 +88,11 @@ def get_stats():
         elif data["type"] == "bids":
             bids_counter += 1
             
-    consumer.stop()  # Always clean up
+    consumer.stop() 
 
     return {"Listings": listings_counter, "Bids": bids_counter}, 200
 
-
+# assignment 2 stuff
 ######################################################################################
 def get_listings_ids():
     consumer = topic.get_simple_consumer(

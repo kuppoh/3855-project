@@ -21,13 +21,12 @@ logger = logging.getLogger('storageLogger')
 
 
 def process_messages():
-    """Process messages from Kafka"""
-    # Connect to Kafka
+
     logger.info(f"Connecting to Kafka: {app_config['events']['hostname']}:{app_config['events']['port']}")
     client = KafkaClient(hosts=f"{app_config['events']['hostname']}:{app_config['events']['port']}")
     topic = client.topics[app_config['events']['topic'].encode()]
     
-    # Create a consumer that starts from the earliest offset and doesn't commit offsets
+
     consumer = topic.get_simple_consumer(
         consumer_group=b'event_group',
         reset_offset_on_start=False,
@@ -35,8 +34,7 @@ def process_messages():
     )
     
     logger.info("Consumer created and subscribed. Waiting for messages...")
-    
-    # Process messages
+
     for msg in consumer:
         if msg is not None:
             try:
@@ -51,8 +49,7 @@ def process_messages():
                 elif msg["type"] == "bids":
                     logger.info("Processing bids event: %s", payload)
                     post_bid(payload)
-                    
-                # Commit the offset after processing
+
                 consumer.commit_offsets()
                 
             except Exception as e:
@@ -154,11 +151,11 @@ def get_bids(start_timestamp, end_timestamp):
     logger.info("Found %d bids (start: %s | end: %s)", len(result), start, end)
     return result
 
+# assignment 2 stuff
 #########################################################################################
 def get_all_events_count():
     session = make_session()
-    
-    # Count all listings and bids
+
     listing_count = session.query(listings).count()
     bid_count = session.query(bids).count()
     
@@ -174,8 +171,7 @@ def get_all_events_count():
 
 def get_listings_ids():
     session = make_session()
-    
-    # Get all listings IDs and trace IDs
+
     result = [
         {
             "event_id": row.listing_id,
@@ -192,7 +188,6 @@ def get_listings_ids():
 def get_bids_ids():
     session = make_session()
     
-    # Get all bid IDs and trace IDs
     result = [
         {
             "event_id": row.bidding_id,
@@ -210,7 +205,6 @@ def get_bids_ids():
 
 
 def setup_kafka_thread():
-    """Set up a background thread to consume messages from Kafka"""
     logger.info("Setting up Kafka consumer thread")
     t1 = Thread(target=process_messages)
     t1.daemon = True
