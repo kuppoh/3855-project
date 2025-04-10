@@ -191,13 +191,12 @@ def update_checks():
   return {"processing_time_ms": processing_time_ms}, 200
 
 def get_checks():
-  """Get the results of the latest consistency check"""
   if not os.path.exists(DATASTORE_FILE):
       return {"message": "No consistency checks have been run yet"}, 404
   
   try:
       with open(DATASTORE_FILE, 'r') as f:
-          return json.load(f), 200
+        return json.load(f), 200
   except Exception as e:
       logger.error(f"Error reading consistency check results: {str(e)}")
       return {"message": f"Error reading consistency check results: {str(e)}"}, 500

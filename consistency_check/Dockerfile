@@ -4,8 +4,6 @@ LABEL maintainer="kwacnang@my.bcit.ca"
 
 RUN mkdir /app
 
-RUN mkdir -p data/consistency_check
-
 COPY requirements.txt /app/requirements.txt
 
 WORKDIR /app
