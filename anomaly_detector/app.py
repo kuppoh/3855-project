@@ -81,7 +81,7 @@ def get_anomalies(event_type=None):
     elif event_type == "bids":
         with open(DATASTORE, 'r') as f:
             return json.load(f["bid_anomalies"]), 200
-    elif event_type == "":
+    elif event_type == None:
         with open(DATASTORE, 'r') as f:
             return json.load(f), 200
     else:

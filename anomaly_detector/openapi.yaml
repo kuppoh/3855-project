@@ -34,7 +34,7 @@ paths:
           description: Filter by event type (EVENT1, EVENT2) - shows all anomalies if not provided
           schema:
             type: string
-            example: EVENT1 # CHANGE THIS
+            example: listings 
       responses:
         '200':
           description: Successfully returned a non-empty list of anomalies of the given event type
@@ -47,7 +47,7 @@ paths:
         '204':
           description: No anomalies found for the given event type
         '400':
-          description: Invalid Event Type, must be EVENT1 or EVENT2 # CHANGE THIS
+          description: Invalid Event Type, must be listings or bids
           content:
             application/json:
               schema:
@@ -87,7 +87,7 @@ components:
           example: A12345
         event_type:
           type: string
-          example: EVENT1
+          example: listings
         anomaly_type:
           type: string
           example: Too High
