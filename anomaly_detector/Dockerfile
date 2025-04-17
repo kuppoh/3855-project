@@ -19,4 +19,4 @@ EXPOSE 8400
 # Entrypoint = run Python
 ENTRYPOINT [ "python3" ]
 # Default = run app.py
-CMD [ "app.py", "reset" ]
+CMD [ "app.py" ]
