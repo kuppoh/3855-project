@@ -1,14 +1,12 @@
 import connexion, json, datetime, logging.config, yaml, sys, os
 from datetime import datetime
 from connexion import NoContent
-from database import make_session
 from sqlalchemy import select
-from models import listings, bids, Base
 from pykafka import KafkaClient
 from pykafka.common import OffsetType
 from threading import Thread
-from commands import create_tables, drop_tables
-from database import engine
+
+
 
 with open('./config/anomaly_detector/app_conf.yaml', 'r') as f:
     app_config = yaml.safe_load(f.read())
