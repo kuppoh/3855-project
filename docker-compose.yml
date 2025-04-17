@@ -175,6 +175,27 @@ services:
     networks:
       - my_network
 
+  anomaly_detector:
+    build:
+      context: anomaly_detector
+      dockerfile: Dockerfile
+    container_name: anomaly_detector
+    depends_on:
+      - processing
+      - analyzer
+      - storage
+    volumes:
+      - ./config/anomaly_detector/app_conf.yaml:/app/config/anomaly_detector/app_conf.yaml
+      - ./config/log_conf.yaml:/app/config/log_conf.yaml
+      - ./logs/:/app/logs/
+      - ./data/anomaly_detector:/app/data/anomaly_detector/
+    user: nobody
+    environment: 
+      CORS_ALLOW_ALL: yes
+      LISTING_PRICE_THRESHOLD: 1000.00
+    networks:
+      - my_network
+
 networks:
   my_network:
     driver: bridge

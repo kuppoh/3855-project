@@ -11,11 +11,12 @@ WORKDIR /app
 RUN pip3 install --upgrade pip && pip3 install setuptools
 RUN pip3 install -r requirements.txt 
 
+
 COPY . /app
 
-EXPOSE 8300
+EXPOSE 8400
 
-
+# Entrypoint = run Python
 ENTRYPOINT [ "python3" ]
-
-CMD [ "app.py" ]
+# Default = run app.py
+CMD [ "app.py", "reset" ]

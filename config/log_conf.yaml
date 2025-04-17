@@ -38,6 +38,13 @@ handlers:
     formatter: simple
     filename: /app/logs/consistency.log
     mode: a
+  anomaly_file:
+    class: logging.FileHandler
+    level: DEBUG
+    formatter: simple
+    filename: /app/logs/anomaly.log
+    mode: a
+
 
 loggers:
   processingLogger:
@@ -59,6 +66,10 @@ loggers:
   consistencyLogger:
     level: DEBUG
     handlers: [console, consistency_file]
+    propagate: no
+  anomalyLogger:
+    level: DEBUG
+    handlers: [console, anomaly_file]
     propagate: no
 
 root:
