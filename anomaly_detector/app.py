@@ -74,6 +74,12 @@ def update_anomalies():
     return {"message": f"Finished updates"}, 200
 
 
+DEFAULT_VAL = {
+    "listing_anomalies": [],
+    "bid_anomalies": []
+}
+
+
 def get_anomalies(event_type=None):
     if event_type == "listings":
         with open(DATASTORE, 'r') as f:
@@ -83,7 +89,10 @@ def get_anomalies(event_type=None):
             return json.load(f["bid_anomalies"]), 200
     elif event_type == None:
         with open(DATASTORE, 'r') as f:
-            return json.load(f), 200
+            if length(f) < 2:
+                return DEFAULT_VAL, 200
+            else:
+                return json.load(f), 200
     else:
         return f"event type provided is invalid.", 404
 
