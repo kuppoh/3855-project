@@ -46,20 +46,24 @@ def update_anomalies():
 
         if data["type"] == "listings":
             if data["listing_price"] < LISTING_PRICE_THRESHOLD:
-                result["listing_anomalies"].append(
+                result["listing_anomalies"].append({
                     "event_type": "listings",
                     "event_id": data["event_id"],
                     "trace_id": data["trace_id"],
-                    "description": f"Given value: {data["listing_price"]}, threshold: $1000.00"
+                    "description": f"Given value: {data["listing_price"]}, threshold: ${LISTING_PRICE_THRESHOLD}"
+                }
+
                 )
 
         if data["type"] == "bids":
             if data["offer_price"] < data["asking_price"]:
-                result["bid_anomalies"].append(
+                result["bid_anomalies"].append({
                     "event_type": "bids",
                     "event_id": data["event_id"],
                     "trace_id": data["trace_id"],
                     "description": f"Given value: {data["offer_price"]}, is lower than the asking price: {data["asking_price"]}."
+                }
+
                 ) 
 
     with open(DATASTORE, 'w') as f:
